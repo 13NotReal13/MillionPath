@@ -29,6 +29,9 @@ final class NavigationCoordinator: ObservableObject {
     @Published var path = NavigationPath()
     @Published var sheet: Sheet?
     
+    static let shared = NavigationCoordinator()
+    private init() {}
+    
     func push(_ page: Page) {
         path.append(page)
     }
@@ -59,11 +62,11 @@ final class NavigationCoordinator: ObservableObject {
         }
     }
     
-//    @ViewBuilder
-//    func build(sheet: Sheet) -> some View {
-//        switch sheet {
-//        case .rules:
-//            RulesView()
-//        }
-//    }
+    @ViewBuilder
+    func build(sheet: Sheet) -> some View {
+        switch sheet {
+        case .rules:
+            EmptyView()
+        }
+    }
 }
