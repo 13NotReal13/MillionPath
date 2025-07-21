@@ -11,7 +11,7 @@ import SwiftUI
 struct MillionPathApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
         }
     }
 }
