@@ -25,6 +25,14 @@ class NetworkService: NetworkServiceProtocol {
     
     private init() {}
     
+    var host: String {
+#if DEBUG
+        return "http://localhost:8080/json"
+#else
+        return Constants.baseURL
+#endif
+    }
+    
     func fetchAllQuestions() async throws -> [Question] {
         var allQuestions: [Question] = []
         
@@ -41,12 +49,12 @@ class NetworkService: NetworkServiceProtocol {
                 allQuestions.append(contentsOf: response.results)
             }
         }
-                
+        
         return allQuestions
     }
     
     private func fetch<T: Decodable>(difficulty: Difficulty) async throws -> T {
-        guard var components = URLComponents(string: Constants.baseURL) else {
+        guard var components = URLComponents(string: host) else {
             throw NetworkError.invalidURL
         }
         
