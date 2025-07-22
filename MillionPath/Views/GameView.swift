@@ -46,6 +46,8 @@ struct GameView: View {
             Button("Заново") {
                 vm.newGame()
             }
+        case .allQuestions(let score):
+            Text("тут про текущий прогресс")
         }
     }
     

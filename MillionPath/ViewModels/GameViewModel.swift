@@ -13,16 +13,29 @@ enum GameState {
     case error(message: String)
     case gameOver(score: Int)
     case winner(score: Int)
+    case allQuestions(currentScore: Int)
+}
+
+struct ExpertsHelpModel: Identifiable {
+    let id: UUID = UUID()
+    let answer: String
+    let probability: Double
 }
 
 @MainActor
 class GameViewModel: ObservableObject {
     @Published var state: GameState = .loading
     @Published var currentQuestion: CurrentQuestion?
+    @Published var wasUsed50: Bool = false
+    @Published var wasUsedFriends: Bool = false
+    @Published var wasUsedExperts: Bool = false
     
     private enum Constansts {
         static let costs: [Int] = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16_000, 32_000, 64_000, 125_000, 250_000, 500_000, 1_000_000]
         static let nonBurningCosts: [Int] = [1000, 32_000, 1_000_000]
+        static let friendsProbability: Double = 0.8
+        static let expertsEasyProbability: Double = 0.7
+        static let expertsHardProbability: Double = 0.5
     }
     
     private var currentQuestionIndex: Int = 0
@@ -60,6 +73,9 @@ extension GameViewModel {
     
     func newGame() {
         currentQuestionIndex = 0
+        wasUsed50 = false
+        wasUsedFriends = false
+        wasUsedExperts = false
         
         Task {
             await reloadQuestions()
@@ -77,16 +93,63 @@ extension GameViewModel {
         indexesToRemove.forEach { i in
             currentQuestion?.answers[i].state = .hidden
         }
+        
+        wasUsed50 = true
     }
     
     /// Звонок другу
     func getFriendsHelp() {
+        if Double.random(in: 0...1) < Constansts.friendsProbability {
+            if let rightAnswerIndex = currentQuestion?.answers.firstIndex(where: { $0.state == .correct }) {
+                currentQuestion?.answers[rightAnswerIndex].state = .friendsAnswer
+            }
+        } else {
+            if let wrongAnswerIndex = currentQuestion?.answers.firstIndex(where: { $0.state == .incorrect }) {
+                currentQuestion?.answers[wrongAnswerIndex].state = .friendsAnswer
+            }
+        }
         
+        wasUsedFriends = true
     }
     
     /// Помощь зала
-    func getExpertHelp() {
+    func getExpertHelp() -> [ExpertsHelpModel] {
+        if let rightAnswerIndex = currentQuestion?.answers.firstIndex(where: { $0.state == .correct }) {
+           let probability = currentQuestion?.isHard ?? false ? Constansts.expertsHardProbability : Constansts.expertsEasyProbability
+            var expertsHelp: [ExpertsHelpModel] = []
+            
+            expertsHelp.append(
+                ExpertsHelpModel(
+                    answer: currentQuestion?.answers[rightAnswerIndex].answer ?? "",
+                    probability: probability
+                )
+            )
+            
+            var remainingProbability = 1.0 - probability
+            
+            for i in getRemainintIndexes() {
+                if getIncorrectIndexes().count == 1 {
+                    expertsHelp.append(
+                        ExpertsHelpModel(
+                            answer: currentQuestion?.answers[i].answer ?? "",
+                            probability: remainingProbability
+                        )
+                    )
+                } else {
+                    expertsHelp.append(
+                        ExpertsHelpModel(
+                            answer: currentQuestion?.answers[i].answer ?? "",
+                            probability: remainingProbability / Double(getIncorrectIndexes().count) // подумать над случайным распределением
+                        )
+                    )
+                }
+            }
+            
+            wasUsedExperts = true
+            return expertsHelp
+        }
         
+        return []
     }
     
     private func getNextQuestion() {
@@ -100,6 +163,13 @@ extension GameViewModel {
         return currentQuestion?.answers
             .enumerated()
             .filter { $0.element.state != .correct }
+            .compactMap { $0.offset } ?? []
+    }
+    
+    private func getRemainintIndexes() -> [Int] {
+        return currentQuestion?.answers
+            .enumerated()
+            .filter { $0.element.state != .correct || $0.element.state != .hidden } // убираем правильный ответ и скрытый по 50/50
             .compactMap { $0.offset } ?? []
     }
 }
