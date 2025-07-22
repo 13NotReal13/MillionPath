@@ -10,7 +10,7 @@ import SwiftUI
 import SwiftUI
 
 struct HomeView: View {
-    @State private var isSheetShowed: Bool = false
+    @EnvironmentObject private var coordinator: NavigationCoordinator
     
     var body: some View {
         ZStack {
@@ -20,35 +20,6 @@ struct HomeView: View {
             Spacer()
             
             VStack(spacing: 16) {
-                HStack {
-                    Spacer()
-                    Button(action: {
-                        isSheetShowed.toggle()
-                    }) {
-                        Image(systemName: "questionmark.circle.fill")
-                            .resizable()
-                            .frame(width: 32, height: 32)
-                            .foregroundColor(.white)
-                    }
-                    .sheet(isPresented: $isSheetShowed) {
-                        NavigationStack {
-                            RulesView()
-                                .toolbar {
-                                    ToolbarItem(placement: .principal) {
-                                        Text("Rules")
-                                            .font(.headline)
-                                            .foregroundColor(.white)
-                                    }
-                                    ToolbarItem(placement: .topBarLeading) {
-                                        Button("Close") {
-                                            isSheetShowed = false
-                                        }
-                                    }
-                                }
-                        }
-                    }
-                }
-                
                 Spacer()
                 Image("Logo")
                     .frame(width: 195.0, height: 195.0)
@@ -81,11 +52,23 @@ struct HomeView: View {
                 }
             }
             .padding(32)
-            
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    coordinator.present(sheet: .rules)
+                } label: {
+                    Image(systemName: "questionmark.circle.fill")
+                        .resizable()
+                        .frame(width: 32, height: 32)
+                        .foregroundColor(.white)
+                }
+            }
         }
     }
 }
 
 #Preview {
     HomeView()
+        .environmentObject(NavigationCoordinator.shared)
 }

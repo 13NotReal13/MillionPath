@@ -48,7 +48,7 @@ final class NavigationCoordinator: ObservableObject {
         self.sheet = sheet
     }
     
-    func dismiss() {
+    func dismissSheet() {
         sheet = nil
     }
     
@@ -66,7 +66,7 @@ final class NavigationCoordinator: ObservableObject {
     func build(sheet: Sheet) -> some View {
         switch sheet {
         case .rules:
-            EmptyView()
+            RulesView()
         }
     }
 }

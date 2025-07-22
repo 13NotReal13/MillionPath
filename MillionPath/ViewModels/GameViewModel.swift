@@ -125,7 +125,7 @@ extension GameViewModel {
                 )
             )
             
-            var remainingProbability = 1.0 - probability
+            let remainingProbability = 1.0 - probability
             
             for i in getRemainintIndexes() {
                 if getIncorrectIndexes().count == 1 {
