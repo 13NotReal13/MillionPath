@@ -48,7 +48,6 @@ struct HomeView: View {
                             CustomButtonShape()
                                 .stroke(Color.white, lineWidth: 4)
                         )
-                    
                 }
             }
             .padding(32)

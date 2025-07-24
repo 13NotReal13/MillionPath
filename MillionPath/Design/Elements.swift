@@ -23,3 +23,21 @@ struct CustomButtonShape: Shape {
         return path
     }
 }
+
+struct ButtonView: ViewModifier {
+    var backgroundColors: LinearGradient
+    func body(content: Content) -> some View {
+        content
+            .font(.system(size: 20, weight: .semibold))
+            .foregroundColor(.white)
+            .frame(width: 311, height: 62)
+            .background(
+                backgroundColors
+            )
+            .clipShape(CustomButtonShape())
+            .overlay(
+                CustomButtonShape()
+                    .stroke(Color.white, lineWidth: 4)
+            )
+    }
+}
