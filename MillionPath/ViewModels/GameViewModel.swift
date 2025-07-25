@@ -38,24 +38,69 @@ class GameViewModel: ObservableObject {
         static let expertsHardProbability: Double = 0.5
     }
     
-    private var currentQuestionIndex: Int = 0
+   var currentQuestionIndex: Int = 0
     private var networkService: NetworkServiceProtocol
     private var questions: [Question] = []
     
-    init(
-        networkService: NetworkServiceProtocol = NetworkService.shared
-    ) {
-        self.networkService = networkService
-        
-        Task {
-            await loadQuestions()
-        }
+
+//    init(networkService: NetworkServiceProtocol = NetworkService.shared) {
+//        self.networkService = networkService
+//        Task {
+//            await loadQuestions()
+//        }
+//    }
+
+    
+    init() {
+        self.networkService = NetworkService.shared
+
+        //Временно — тестовый вопрос
+        self.currentQuestion = CurrentQuestion(
+            model: Question(
+                category: "Test",
+                question: "What year was the year, when first deodorant was invented in our life?",
+                correctAnswer: "First answer",
+                incorrectAnswers: ["Second answer", "Third answer", "Fourdth answer"],
+                difficulty: .easy,
+                type: "multiple"
+            ),
+            cost: 100
+        )
+        self.state = .ready
     }
 }
 
 // MARK: - Бизнес логика
 
 extension GameViewModel {
+    // обработка ответа
+    func selectAnswer(id: UUID) {
+        guard var question = currentQuestion else { return }
+
+        // Найдём правильный ответ
+        guard let correctIndex = question.answers.firstIndex(where: { $0.state == .correct }) else { return }
+
+        // Найдём индекс выбранного пользователем ответа
+        guard let selectedIndex = question.answers.firstIndex(where: { $0.id == id }) else { return }
+
+        // Если выбрали правильный
+        if selectedIndex == correctIndex {
+            question.answers[selectedIndex].state = .correct
+        } else {
+            // Если выбрали неправильный — отметим его и правильный
+            question.answers[selectedIndex].state = .incorrect
+            question.answers[correctIndex].state = .correct
+        }
+
+        // Остальные — в hidden
+        for i in question.answers.indices {
+            if i != selectedIndex && i != correctIndex {
+                question.answers[i].state = .hidden
+            }
+        }
+
+        currentQuestion = question
+    }
     
     func nextQuestion() {
         guard currentQuestionIndex + 1 <= Constansts.costs.count - 1 else {
