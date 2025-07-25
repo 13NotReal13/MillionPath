@@ -8,9 +8,11 @@
 import SwiftUI
 
 struct GameView: View {
-    // пока что с модели
     
-    @State private var game = Game(questions: [
+    // пока что с модели
+    @State private var answers: [CurrentQuestion.Answer] = []
+    
+    @State private var vm = Game(questions: [
         CurrentQuestion(
             model: Question(
                 category: "History",
@@ -26,8 +28,8 @@ struct GameView: View {
     
     private let timeRemaining = 30
     
-    let gradientfillColor = LinearGradient(colors: [.blue, .black], startPoint: .top, endPoint: .bottom)
-        
+    private let gradientfillColor = LinearGradient(colors: [.blue, .black], startPoint: .top, endPoint: .bottom)
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -52,7 +54,7 @@ struct GameView: View {
                     }
                     
                     // Вопрос
-                    Text(game.currentQuestion?.question ?? "")
+                    Text(vm.currentQuestion?.question ?? "")
                         .font(.title3)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.white)
@@ -61,21 +63,34 @@ struct GameView: View {
                         .padding(.bottom, 32)
                     
                     // Варианты ответа
-                    VStack(spacing: 12) {
-                        ForEach(Array((game.currentQuestion?.answers ?? []).enumerated()), id: \.element.id) { index, answer in
+                    VStack(spacing: 16) {
+                        //                        ForEach(Array((vm.currentQuestion?.answers ?? []).enumerated()), id: \.element.id) { index, answer in
+                        ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
                             AnswerButtonView(index: index, answer: answer)
+                                .onTapGesture {
+                                    answers = answers.enumerated().map { i, answer in
+                                        var updated = answer
+                                        updated.state = (i == index) ? .correct : .incorrect
+                                        return updated
+                                    }
+                                }
                         }
-                                            }
+                    }
                     .padding(.bottom, 40)
                     
                     //Подсказки
                     HStack(spacing: 24) {
-                        HelpButton(icon: Image(._50_50), isUsed: game.isHintUsed(.fiftyFifty))
-                        HelpButton(icon: Image(.audience), isUsed: game.isHintUsed(.audience))
-                        HelpButton(icon: Image(.call), isUsed: game.isHintUsed(.secondChance))
+                        HelpButton(icon: Image(._50_50), isUsed: vm.isHintUsed(.fiftyFifty))
+                        HelpButton(icon: Image(.audience), isUsed: vm.isHintUsed(.audience))
+                        HelpButton(icon: Image(.call), isUsed: vm.isHintUsed(.secondChance))
                     }
                 }
                 .padding()
+                .onAppear {
+                    if let question = vm.currentQuestion {
+                        answers = question.answers
+                    }
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -87,10 +102,10 @@ struct GameView: View {
                 
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 4) {
-                        Text("QUESTION #\(game.currentIndex + 1)")
+                        Text("QUESTION #\(vm.currentIndex + 1)")
                             .foregroundColor(.white)
                             .font(.caption)
-                        Text("$\(game.currentQuestion?.cost ?? 0)")
+                        Text("$\(vm.currentQuestion?.cost ?? 0)")
                             .foregroundColor(.white)
                             .bold()
                     }
@@ -109,19 +124,17 @@ struct GameView: View {
     GameView()
 }
 
+//struct Answer: Identifiable {
+//    let id: UUID
+//    let text: String
+//    var state: AnswerState = .correct
+//}
 
-
-struct Answer: Identifiable {
-    let id: UUID
-    let text: String
-    var state: AnswerState = .correct
-}
-
-enum AnswerState {
-    case normal
-    case correct
-    case incorrect
-}
+//enum AnswerState {
+//    case normal
+//    case correct
+//    case incorrect
+//}
 
 struct AnswerButtonView: View {
     let index: Int
@@ -133,31 +146,38 @@ struct AnswerButtonView: View {
         Text("\(letter): \(answer.answer)")
             .padding()
             .frame(maxWidth: .infinity)
-            .background(
-                CustomButtonShape()
-                    .fill(backgroundColor(for: answer.state))
-            )
-            .overlay(
-                CustomButtonShape()
-                    .stroke(Color.white, lineWidth: 2)
-            )
-            .foregroundColor(.white)
+        // заменить потом для состояния на answer.state
+            .modifier(ButtonView(backgroundColors: gradient(for: answer.state)))
     }
     
-    private func backgroundColor(for state: CurrentQuestion.Answer.QuestionState) -> Color {
+    private func gradient(for state: CurrentQuestion.Answer.QuestionState) -> LinearGradient {
         switch state {
         case .hidden:
-            return .clear
+            return LinearGradient(colors: [.blue, .black], startPoint: .top, endPoint: .bottom)
         case .correct:
-            return .green
+            return LinearGradient(colors: [.green, .green.opacity(0.2)], startPoint: .top, endPoint: .bottom)
         case .incorrect:
-            return .red
+            return LinearGradient(colors: [.red, .red.opacity(0.2)], startPoint: .top, endPoint: .bottom)
         case .friendsAnswer:
-            return .yellow
+            return LinearGradient(colors: [.yellow, .yellow.opacity(0.2)], startPoint: .top, endPoint: .bottom)
         }
     }
 }
 
+//    private func backgroundColor(for state: CurrentQuestion.Answer.QuestionState) -> Color {
+//        switch state {
+//        case .hidden:
+//            return .clear
+//        case .correct:
+//            return .green
+//        case .incorrect:
+//            return .red
+//        case .friendsAnswer:
+//            return .yellow
+//        }
+//}
+
+// ToDo добавить логику нажатия
 struct HelpButton: View {
     var icon: Image
     var isUsed: Bool
@@ -166,6 +186,5 @@ struct HelpButton: View {
         icon
             .padding()
             .frame(width: 84, height: 64)
-            .opacity(0.8)
     }
 }
