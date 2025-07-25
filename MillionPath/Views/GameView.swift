@@ -119,7 +119,7 @@ struct AnswerButtonView: View {
                 CustomButtonShape()
                     .stroke(Color.white, lineWidth: 4)
             )
-            .opacity(answer.state == .hidden ? 1 : 1.0)
+//            .opacity(answer.state == .hidden ? 1 : 1.0)
     }
 
     private func gradient(for state: CurrentQuestion.Answer.QuestionState) -> LinearGradient {
