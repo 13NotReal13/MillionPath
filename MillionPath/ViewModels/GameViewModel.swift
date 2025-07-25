@@ -24,6 +24,9 @@ struct ExpertsHelpModel: Identifiable {
 @MainActor
 class GameViewModel: ObservableObject {
     @Published var game: Game
+    @Published var state: GameState = .loading
+    @Published var userInteractionEnable: Bool = true
+    
     var timerColor: Color {
         switch self.game.timeRemaining {
         case ...10:
@@ -35,15 +38,13 @@ class GameViewModel: ObservableObject {
         }
     }
     
-    @Published var state: GameState = .loading
-    
     private enum Constants {
         static let costs: [Int] = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16_000, 32_000, 64_000, 125_000, 250_000, 500_000, 1_000_000]
         static let nonBurningCosts: [Int] = [0, 1000, 32_000, 1_000_000]
         static let friendsProbability: Double = 0.8
         static let expertsEasyProbability: Double = 0.7
         static let expertsHardProbability: Double = 0.5
-        static let secondsForRound = 500
+        static let secondsForRound = 30
     }
     
     private let networkService: NetworkServiceProtocol
@@ -71,32 +72,67 @@ class GameViewModel: ObservableObject {
 // MARK: - Бизнес логика
 
 extension GameViewModel {
-    // обработка ответа
     func selectAnswer(id: UUID) {
+        guard userInteractionEnable else { return }
         var newGame = game
-        guard newGame.currentQuestionIndex < newGame.questions.count else { return }
-        var question = newGame.questions[newGame.currentQuestionIndex]
-
-        guard let correctIndex = question.answers.firstIndex(where: { $0.state == .correct }) else { return }
+        guard let questionIndex = newGame.currentQuestionIndex as Int?,
+              questionIndex < newGame.questions.count else { return }
+        var question = newGame.questions[questionIndex]
         guard let selectedIndex = question.answers.firstIndex(where: { $0.id == id }) else { return }
+
+        for index in question.answers.indices {
+            question.answers[index].state = (index == selectedIndex) ? .selected : .normal
+        }
+        newGame.questions[questionIndex] = question
+        game = newGame
+
+        userInteractionEnable = false
+        stopTimer()
+        soundService.playSound(.waiting)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            self?.revealAnswer(selectedIndex: selectedIndex)
+        }
+    }
+
+    func revealAnswer(selectedIndex: Int) {
+        var newGame = game
+        let questionIndex = newGame.currentQuestionIndex
+        var question = newGame.questions[questionIndex]
+        guard let correctIndex = question.answers.firstIndex(where: { $0.isCorrect }) else { return }
 
         if selectedIndex == correctIndex {
             question.answers[selectedIndex].state = .correct
+            soundService.playSound(.correct)
         } else {
             question.answers[selectedIndex].state = .incorrect
             question.answers[correctIndex].state = .correct
+            soundService.playSound(.wrong)
         }
-        for i in question.answers.indices {
-            if i != selectedIndex && i != correctIndex {
-                question.answers[i].state = .hidden
+        
+        for index in question.answers.indices where index != selectedIndex && index != correctIndex {
+            question.answers[index].state = .normal
+        }
+        newGame.questions[questionIndex] = question
+        game = newGame
+
+        // Переход к следующему вопросу или конец игры
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            guard let self = self else { return }
+            if selectedIndex == correctIndex {
+                self.nextQuestion()
+                self.startTimer()
+                self.userInteractionEnable = true
+                self.soundService.playSound(.start)
+            } else {
+                self.gameOver()
             }
         }
-        newGame.questions[newGame.currentQuestionIndex] = question
-        game = newGame
     }
     
     func newGame() {
         game.currentQuestionIndex = 0
+        soundService.playSound(.start)
         startTimer()
     }
     
@@ -207,12 +243,6 @@ extension GameViewModel {
             finalScore = getFinalScore()
         }
         
-        if finalScore == Constants.costs.last {
-            soundService.playSound(.winner)
-        } else {
-            soundService.playSound(.wrong)
-        }
-        
         self.state = .gameOver(score: finalScore)
         savingService.updateMaxScore(finalScore)
     }
@@ -235,7 +265,6 @@ extension GameViewModel {
             }
             self.game = Game(questions: currentQuestions)
             self.state = .ready
-            self.newGame()
         }
         catch let error as NetworkError {
             var message: String

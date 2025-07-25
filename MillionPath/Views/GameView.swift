@@ -9,7 +9,7 @@ import SwiftUI
 
 struct GameView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
-    @StateObject private var viewModel = GameViewModel()
+    @EnvironmentObject private var viewModel: GameViewModel
     
     var body: some View {
         ZStack {
@@ -26,6 +26,7 @@ struct GameView: View {
                                 .onTapGesture {
                                     viewModel.selectAnswer(id: answer.id)
                                 }
+                                .disabled(!viewModel.userInteractionEnable)
                         }
                     }
                 }
@@ -117,12 +118,16 @@ struct AnswerButtonView: View {
     
     private func gradient(for state: CurrentQuestion.Answer.QuestionState) -> LinearGradient {
         switch state {
-        case .hidden:
+        case .normal:
             return LinearGradient(colors: [.blue, .black], startPoint: .top, endPoint: .bottom)
+        case .selected:
+            return LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom)
         case .correct:
             return LinearGradient(colors: [.green, .green.opacity(0.2)], startPoint: .top, endPoint: .bottom)
         case .incorrect:
             return LinearGradient(colors: [.red, .red.opacity(0.2)], startPoint: .top, endPoint: .bottom)
+        case .hidden:
+            return LinearGradient(colors: [.gray.opacity(0.1), .gray.opacity(0.1)], startPoint: .top, endPoint: .bottom)
         case .friendsAnswer:
             return LinearGradient(colors: [.yellow, .yellow.opacity(0.2)], startPoint: .top, endPoint: .bottom)
         }

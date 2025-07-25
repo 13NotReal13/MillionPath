@@ -41,7 +41,7 @@ final class AudioManager: AudioManagerProtocol {
         }
     }
     
-    private func stop() {
+    func stop() {
         player?.stop()
     }
 }

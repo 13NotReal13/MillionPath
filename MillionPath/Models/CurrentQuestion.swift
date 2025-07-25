@@ -10,13 +10,16 @@ import Foundation
 struct CurrentQuestion: Identifiable {
     struct Answer: Identifiable {
         enum QuestionState {
+            case normal
+            case selected
             case correct
             case incorrect
             case hidden
             case friendsAnswer
         }
-        
+
         let answer: String
+        let isCorrect: Bool
         var state: QuestionState
         let id: UUID = UUID()
     }
@@ -31,7 +34,10 @@ struct CurrentQuestion: Identifiable {
         self.cost = cost
         self.question = model.question
         self.isHard = model.difficulty == .hard
-        self.answers = [Answer(answer: model.correctAnswer, state: .correct)]
-        + model.incorrectAnswers.map { Answer(answer: $0, state: .incorrect) }
+        
+        var allAnswers = [Answer(answer: model.correctAnswer, isCorrect: true, state: .normal)]
+        allAnswers += model.incorrectAnswers.map { Answer(answer: $0, isCorrect: false, state: .normal) }
+
+        self.answers = allAnswers.shuffled()
     }
 }
