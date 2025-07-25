@@ -8,22 +8,24 @@
 import SwiftUI
 
 struct GameView: View {
-    // Заглушки
-    private let questionNumber = 1
-    private let prize = 100
-    private let timeRemaining = 30
-    private let questionText = "What year was the year, when first deodorant was invented in our life?"
-    private let answers: [Answer] = [
-        .init(id: UUID(), text: "First answer option"),
-        .init(id: UUID(), text: "Second answer option"),
-        .init(id: UUID(), text: "Third answer option"),
-        .init(id: UUID(), text: "Fourth answer option")
-    ]
-    private let usedFiftyFifty = false
-    private let usedAskAudience = false
-    private let usedCallFriend = false
+    // пока что с модели
     
-    // todoo
+    @State private var game = Game(questions: [
+        CurrentQuestion(
+            model: Question(
+                category: "History",
+                question: "What year was the year, when first deodorant was invented in our life?",
+                correctAnswer: "First answer option",
+                incorrectAnswers: ["Second answer option", "Third answer option", "Fourth answer option"],
+                difficulty: .easy,
+                type: "multiple"
+            ),
+            cost: 100
+        )
+    ])
+    
+    private let timeRemaining = 30
+    
     let gradientfillColor = LinearGradient(colors: [.blue, .black], startPoint: .top, endPoint: .bottom)
         
     var body: some View {
@@ -50,7 +52,7 @@ struct GameView: View {
                     }
                     
                     // Вопрос
-                    Text(questionText)
+                    Text(game.currentQuestion?.question ?? "")
                         .font(.title3)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.white)
@@ -60,17 +62,17 @@ struct GameView: View {
                     
                     // Варианты ответа
                     VStack(spacing: 12) {
-                        ForEach(Array(answers.enumerated()), id: \.element.id) { index, answer in
+                        ForEach(Array((game.currentQuestion?.answers ?? []).enumerated()), id: \.element.id) { index, answer in
                             AnswerButtonView(index: index, answer: answer)
                         }
-                    }
+                                            }
                     .padding(.bottom, 40)
                     
                     //Подсказки
                     HStack(spacing: 24) {
-                        HelpButton(icon: Image(._50_50), isUsed: usedFiftyFifty)
-                        HelpButton(icon: Image(.audience), isUsed: usedAskAudience)
-                        HelpButton(icon: Image(.call), isUsed: usedCallFriend)
+                        HelpButton(icon: Image(._50_50), isUsed: game.isHintUsed(.fiftyFifty))
+                        HelpButton(icon: Image(.audience), isUsed: game.isHintUsed(.audience))
+                        HelpButton(icon: Image(.call), isUsed: game.isHintUsed(.secondChance))
                     }
                 }
                 .padding()
@@ -85,10 +87,10 @@ struct GameView: View {
                 
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 4) {
-                        Text("QUESTION #\(questionNumber)")
+                        Text("QUESTION #\(game.currentIndex + 1)")
                             .foregroundColor(.white)
                             .font(.caption)
-                        Text("$\(prize)")
+                        Text("$\(game.currentQuestion?.cost ?? 0)")
                             .foregroundColor(.white)
                             .bold()
                     }
@@ -112,7 +114,7 @@ struct GameView: View {
 struct Answer: Identifiable {
     let id: UUID
     let text: String
-    var state: AnswerState = .normal
+    var state: AnswerState = .correct
 }
 
 enum AnswerState {
@@ -123,12 +125,12 @@ enum AnswerState {
 
 struct AnswerButtonView: View {
     let index: Int
-    let answer: Answer
+    let answer: CurrentQuestion.Answer
     
     var body: some View {
         let letter = ["A", "B", "C", "D"][index]
         
-        Text("\(letter): \(answer.text)")
+        Text("\(letter): \(answer.answer)")
             .padding()
             .frame(maxWidth: .infinity)
             .background(
@@ -142,11 +144,16 @@ struct AnswerButtonView: View {
             .foregroundColor(.white)
     }
     
-    private func backgroundColor(for state: AnswerState) -> Color {
+    private func backgroundColor(for state: CurrentQuestion.Answer.QuestionState) -> Color {
         switch state {
-        case .normal: return .clear
-        case .correct: return .green
-        case .incorrect: return .red
+        case .hidden:
+            return .clear
+        case .correct:
+            return .green
+        case .incorrect:
+            return .red
+        case .friendsAnswer:
+            return .yellow
         }
     }
 }

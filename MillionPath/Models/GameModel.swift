@@ -42,7 +42,7 @@ struct Game {
     // - Если достигнут конец — победа.
     // - Если ответ неверный — завершение, сумма = последняя несгораемая.
     mutating func answerSelected(index: UUID) {
-        guard var question = currentQuestion else { return }
+        guard let question = currentQuestion else { return }
 
         let correctAnswer = question.answers.first(where: { $0.state == .correct })
 
