@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 enum GameState {
     case loading
@@ -23,17 +24,26 @@ struct ExpertsHelpModel: Identifiable {
 @MainActor
 class GameViewModel: ObservableObject {
     @Published var game: Game
+    var timerColor: Color {
+        switch self.game.timeRemaining {
+        case ...10:
+            return .red
+        case 10..<20:
+            return .orange
+        default:
+            return .white
+        }
+    }
     
     @Published var state: GameState = .loading
-    @Published var userInteractionEnable: Bool = true
     
-    private enum Constansts {
+    private enum Constants {
         static let costs: [Int] = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16_000, 32_000, 64_000, 125_000, 250_000, 500_000, 1_000_000]
         static let nonBurningCosts: [Int] = [0, 1000, 32_000, 1_000_000]
         static let friendsProbability: Double = 0.8
         static let expertsEasyProbability: Double = 0.7
         static let expertsHardProbability: Double = 0.5
-        static let secondsForRound = 30
+        static let secondsForRound = 500
     }
     
     private let networkService: NetworkServiceProtocol
@@ -41,8 +51,6 @@ class GameViewModel: ObservableObject {
     private let soundService: AudioManagerProtocol
     
     private var timer: Timer?
-//    private var currentQuestionIndex: Int = 0
-    private var questions: [Question] = []
    
     init(
         networkService: NetworkServiceProtocol = NetworkService.shared,
@@ -87,27 +95,9 @@ extension GameViewModel {
         game = newGame
     }
     
-    func checkAnswer(answer: CurrentQuestion.Answer) {
-        soundService.playSound(.waiting)
-        userInteractionEnable = false
-        stopTimer()
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
-            self?.checkAnswer(answer)
-            self?.userInteractionEnable = true
-        }
-    }
-    
     func newGame() {
         game.currentQuestionIndex = 0
         startTimer()
-    }
-    
-    func restartGame() {
-        newGame()
-        Task {
-            await reloadQuestions()
-        }
     }
     
     /// Подсказка 50/50
@@ -137,7 +127,7 @@ extension GameViewModel {
         guard newGame.currentQuestionIndex < newGame.questions.count else { return }
         var question = newGame.questions[newGame.currentQuestionIndex]
 
-        if Double.random(in: 0...1) < Constansts.friendsProbability {
+        if Double.random(in: 0...1) < Constants.friendsProbability {
             if let rightAnswerIndex = question.answers.firstIndex(where: { $0.state == .correct }) {
                 question.answers[rightAnswerIndex].state = .friendsAnswer
             }
@@ -160,7 +150,7 @@ extension GameViewModel {
 
         guard let rightAnswerIndex = question.answers.firstIndex(where: { $0.state == .correct }) else { return [] }
 
-        let probability = question.isHard ? Constansts.expertsHardProbability : Constansts.expertsEasyProbability
+        let probability = question.isHard ? Constants.expertsHardProbability : Constants.expertsEasyProbability
         var expertsHelp: [ExpertsHelpModel] = []
 
         expertsHelp.append(
@@ -190,46 +180,22 @@ extension GameViewModel {
     
     /// Забрать выйгрыш
     func takeMoneyNow() {
-        gameOver(with: Constansts.costs[game.currentQuestionIndex])
+        gameOver(with: Constants.costs[game.currentQuestionIndex])
     }
     
     func getFinalScore() -> Int {
-        Constansts.nonBurningCosts.last(where: { last in
-            last <= Constansts.costs[game.currentQuestionIndex]
+        Constants.nonBurningCosts.last(where: { last in
+            last <= Constants.costs[game.currentQuestionIndex]
         }) ?? 0
     }
     
-    private func checkAnswer(_ answer: CurrentQuestion.Answer) {
-        if answer.state == .correct {
-            nextQuestion()
-            soundService.playSound(.correct)
-            startTimer()
-        } else {
-            gameOver()
-        }
-    }
-    
     private func nextQuestion() {
-        guard game.currentQuestionIndex + 1 <= Constansts.costs.count - 1 else {
+        guard game.currentQuestionIndex + 1 <= Constants.costs.count - 1 else {
             gameOver()
             return
         }
         
         game.currentQuestionIndex += 1
-    }
-    
-    private func getIncorrectIndexes() -> [Int] {
-        return game.currentQuestion?.answers
-            .enumerated()
-            .filter { $0.element.state != .correct }
-            .compactMap { $0.offset } ?? []
-    }
-    
-    private func getRemainintIndexes() -> [Int] {
-        return game.currentQuestion?.answers
-            .enumerated()
-            .filter { $0.element.state != .correct || $0.element.state != .hidden }
-            .compactMap { $0.offset } ?? []
     }
     
     private func gameOver(with score: Int? = nil) {
@@ -241,7 +207,7 @@ extension GameViewModel {
             finalScore = getFinalScore()
         }
         
-        if finalScore == Constansts.costs.last {
+        if finalScore == Constants.costs.last {
             soundService.playSound(.winner)
         } else {
             soundService.playSound(.wrong)
@@ -253,25 +219,21 @@ extension GameViewModel {
 }
 
 // MARK: - Сервисы
-
 extension GameViewModel {
-    
-    /// Для перезагрузки вопросов если что то пошло не так
-    func reloadQuestions() async {
-        state = .loading
-        await loadQuestions()
-    }
-    
     private func loadQuestions() async {
         do {
             let fetchedQuestions = try await networkService.fetchAllQuestions()
             
-            guard fetchedQuestions.count >= Constansts.costs.count else {
+            guard fetchedQuestions.count >= Constants.costs.count else {
                 self.state = .error(message: "Недостаточно вопросов для игры")
                 return
             }
              
-            self.questions = fetchedQuestions.sorted { $0.difficulty.intValue < $1.difficulty.intValue}
+            let sorted = fetchedQuestions.sorted { $0.difficulty.intValue < $1.difficulty.intValue }
+            let currentQuestions = (0..<Constants.costs.count).map { index in
+                CurrentQuestion(model: sorted[index], cost: Constants.costs[index])
+            }
+            self.game = Game(questions: currentQuestions)
             self.state = .ready
             self.newGame()
         }
@@ -297,13 +259,11 @@ extension GameViewModel {
 }
 
 // MARK: - Timer
-
 extension GameViewModel {
-    
-    func startTimer() {
+    private func startTimer() {
         stopTimer()
         
-        game.timeRemaining = Constansts.secondsForRound
+        game.timeRemaining = Constants.secondsForRound
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -322,11 +282,6 @@ extension GameViewModel {
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
-    }
-    
-    private func resetTimer() {
-        stopTimer()
-        game.timeRemaining = Constansts.secondsForRound
     }
     
     private func handleTimeExpired() {

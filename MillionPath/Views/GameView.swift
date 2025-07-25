@@ -14,31 +14,9 @@ struct GameView: View {
     var body: some View {
         ZStack {
             VStack {
-                // Таймер
-                HStack {
-                    Image(systemName: "stopwatch.fill")
-                        .resizable()
-                        .frame(width: 21, height: 21)
-                    Text("\(viewModel.game.timeRemaining)")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                }
-                .foregroundStyle(.white)
-                .overlay {
-                    Capsule().fill(Color.white.opacity(0.5))
-                        .frame(width: 91, height: 45)
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 16)
-                }
+                TimerView()
                 
-                // Вопрос
-                Text(viewModel.game.currentQuestion?.question ?? "")
-                    .font(.title3)
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.white)
-                    .frame(height: 147)
-                    .padding(.horizontal)
-                    .padding(.bottom, 32)
+                QuestionView()
                 
                 // Варианты ответа
                 VStack(spacing: 16) {
@@ -71,6 +49,7 @@ struct GameView: View {
             }
             .padding()
         }
+        .environmentObject(viewModel)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(BackgroundView())
         .navigationBarBackButtonHidden()
@@ -109,6 +88,7 @@ struct GameView: View {
 #Preview {
     GameView()
         .environmentObject(NavigationCoordinator.shared)
+        .environmentObject(GameViewModel())
 }
 
 
