@@ -17,7 +17,7 @@ class NetworkService: NetworkServiceProtocol {
     private enum Constants {
         static let baseURL: String = "https://opentdb.com/api.php?"
         static let amountKey = "amount"
-        static let amountValue = "10"
+        static let amountValue = "30"
         static let typeKey = "type"
         static let typeValue = "multiple"
         static let difficultyKey = "difficulty"
@@ -26,23 +26,15 @@ class NetworkService: NetworkServiceProtocol {
     private init() {}
     
     var host: String {
-#if DEBUG
-        return "http://localhost:8080/json"
-#else
         return Constants.baseURL
-#endif
     }
     
     func fetchAllQuestions() async throws -> [Question] {
         var allQuestions: [Question] = []
         
         try await withThrowingTaskGroup(of: Response.self) { group in
-            
-            for difficulty in Difficulty.allCases {
-                group.addTask {
-                    
-                    return try await self.fetch(difficulty: difficulty)
-                }
+            group.addTask {
+                return try await self.fetch()
             }
             
             for try await response in group {
@@ -53,20 +45,25 @@ class NetworkService: NetworkServiceProtocol {
         return allQuestions
     }
     
-    private func fetch<T: Decodable>(difficulty: Difficulty) async throws -> T {
+    private func fetch<T: Decodable>(difficulty: Difficulty? = nil) async throws -> T {
         guard var components = URLComponents(string: host) else {
             throw NetworkError.invalidURL
         }
         
         components.queryItems = [
             URLQueryItem(name: Constants.amountKey, value: Constants.amountValue),
-            URLQueryItem(name: Constants.typeKey, value: Constants.typeValue),
-            URLQueryItem(name: Constants.difficultyKey, value: difficulty.rawValue)
+            URLQueryItem(name: Constants.typeKey, value: Constants.typeValue)
         ]
+        
+        if let difficulty {
+            components.queryItems?.append(URLQueryItem(name: Constants.difficultyKey, value: difficulty.rawValue))
+        }
         
         guard let finalURL = components.url else {
             throw NetworkError.invalidURL
         }
+        
+        print("final url", finalURL)
         
         let request = URLRequest(url: finalURL)
         

@@ -35,5 +35,16 @@ enum Difficulty: String, Codable, CaseIterable {
     case easy = "easy"
     case medium = "medium"
     case hard = "hard"
+    
+    var intValue: Int {
+        switch self {
+        case .easy:
+            return 1
+        case .medium:
+            return 2
+        case .hard:
+            return 3
+        }
+    }
 }
 
