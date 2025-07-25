@@ -10,8 +10,6 @@ import SwiftUI
 struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
     
-    private let timeRemaining = 30
-    
     private let gradientfillColor = LinearGradient(colors: [.blue, .black], startPoint: .top, endPoint: .bottom)
     
     var body: some View {
@@ -25,7 +23,7 @@ struct GameView: View {
                     Image(systemName: "stopwatch.fill")
                         .resizable()
                         .frame(width: 21, height: 21)
-                    Text("\(timeRemaining)")
+                    Text("\(viewModel.timeRemaining)")
                         .font(.title2)
                         .fontWeight(.bold)
                 }
@@ -79,7 +77,7 @@ struct GameView: View {
             
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 4) {
-                    Text("QUESTION #\(viewModel.currentQuestionIndex + 1)")
+                    Text("QUESTION #")
                         .foregroundColor(.white)
                         .font(.caption)
                     Text("$\(viewModel.currentQuestion?.cost ?? 0)")

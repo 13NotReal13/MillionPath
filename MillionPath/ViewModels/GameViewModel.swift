@@ -12,8 +12,6 @@ enum GameState {
     case ready
     case error(message: String)
     case gameOver(score: Int)
-    case winner(score: Int)
-    case allQuestions(currentScore: Int)
 }
 
 struct ExpertsHelpModel: Identifiable {
@@ -29,44 +27,38 @@ class GameViewModel: ObservableObject {
     @Published var wasUsed50: Bool = false
     @Published var wasUsedFriends: Bool = false
     @Published var wasUsedExperts: Bool = false
+    @Published var timeRemaining: Int = Constansts.secondsForRound
+    @Published var userInteractionEnable: Bool = true
     
     private enum Constansts {
         static let costs: [Int] = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16_000, 32_000, 64_000, 125_000, 250_000, 500_000, 1_000_000]
-        static let nonBurningCosts: [Int] = [1000, 32_000, 1_000_000]
+        static let nonBurningCosts: [Int] = [0, 1000, 32_000, 1_000_000]
         static let friendsProbability: Double = 0.8
         static let expertsEasyProbability: Double = 0.7
         static let expertsHardProbability: Double = 0.5
+        static let secondsForRound: Int = 30
     }
     
-   var currentQuestionIndex: Int = 0
-    private var networkService: NetworkServiceProtocol
+    private let networkService: NetworkServiceProtocol
+    private let savingService: SaveResultServiceProtocol
+    private let soundService: AudioManagerProtocol
+    
+    private var timer: Timer?
+    private var currentQuestionIndex: Int = 0
     private var questions: [Question] = []
-    
-
-//    init(networkService: NetworkServiceProtocol = NetworkService.shared) {
-//        self.networkService = networkService
-//        Task {
-//            await loadQuestions()
-//        }
-//    }
-
-    
-    init() {
-        self.networkService = NetworkService.shared
-
-        //Временно — тестовый вопрос
-        self.currentQuestion = CurrentQuestion(
-            model: Question(
-                category: "Test",
-                question: "What year was the year, when first deodorant was invented in our life?",
-                correctAnswer: "First answer",
-                incorrectAnswers: ["Second answer", "Third answer", "Fourdth answer"],
-                difficulty: .easy,
-                type: "multiple"
-            ),
-            cost: 100
-        )
-        self.state = .ready
+   
+    init(
+        networkService: NetworkServiceProtocol = NetworkService.shared,
+        savingService: SaveResultServiceProtocol = SaveResultService.shared,
+        soundService: AudioManagerProtocol = AudioManager.shared
+    ) {
+        self.networkService = networkService
+        self.savingService = savingService
+        self.soundService = soundService
+        
+        Task {
+            await loadQuestions()
+        }
     }
 }
 
@@ -102,18 +94,15 @@ extension GameViewModel {
         currentQuestion = question
     }
     
-    func nextQuestion() {
-        guard currentQuestionIndex + 1 <= Constansts.costs.count - 1 else {
-            self.state = .gameOver(score: 3232) // логика очков
-            return
-        }
+    func checkAnswer(answer: CurrentQuestion.Answer) {
+        soundService.playSound(.waiting)
+        userInteractionEnable = false
+        stopTimer()
         
-        currentQuestionIndex += 1
-        getNextQuestion()
-    }
-    
-    func gameOver() {
-        self.state = .gameOver(score: 3232) // логика очков + не сгораемые
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            self?.checkAnswer(answer)
+            self?.userInteractionEnable = true
+        }
     }
     
     func newGame() {
@@ -121,10 +110,15 @@ extension GameViewModel {
         wasUsed50 = false
         wasUsedFriends = false
         wasUsedExperts = false
-        
-//        Task {
-//            await reloadQuestions()
-//        }
+//        getNextQuestion()
+        startTimer()
+    }
+    
+    func restartGame() {
+        newGame()
+        Task {
+            await reloadQuestions()
+        }
     }
     
     /// Подсказка 50/50
@@ -172,22 +166,15 @@ extension GameViewModel {
             
             let remainingProbability = 1.0 - probability
             
-            for i in getRemainintIndexes() {
-                if getIncorrectIndexes().count == 1 {
-                    expertsHelp.append(
-                        ExpertsHelpModel(
-                            answer: currentQuestion?.answers[i].answer ?? "",
-                            probability: remainingProbability
-                        )
+            let incorrects = currentQuestion?.answers.filter { $0.state == .incorrect || $0.state == .friendsAnswer }
+            
+            for i in incorrects ?? [] {
+                expertsHelp.append(
+                    ExpertsHelpModel(
+                        answer: i.answer,
+                        probability: remainingProbability / Double(incorrects?.count ?? 1)
                     )
-                } else {
-                    expertsHelp.append(
-                        ExpertsHelpModel(
-                            answer: currentQuestion?.answers[i].answer ?? "",
-                            probability: remainingProbability / Double(getIncorrectIndexes().count) // подумать над случайным распределением
-                        )
-                    )
-                }
+                )
             }
             
             wasUsedExperts = true
@@ -195,6 +182,37 @@ extension GameViewModel {
         }
         
         return []
+    }
+    
+    /// Забрать выйгрыш
+    func takeMoneyNow() {
+        gameOver(with: Constansts.costs[currentQuestionIndex])
+    }
+    
+    func getFinalScore() -> Int {
+        Constansts.nonBurningCosts.last(where: { last in
+            last <= Constansts.costs[currentQuestionIndex]
+        }) ?? 0
+    }
+    
+    private func checkAnswer(_ answer: CurrentQuestion.Answer) {
+        if answer.state == .correct {
+            nextQuestion()
+            soundService.playSound(.correct)
+            startTimer()
+        } else {
+            gameOver()
+        }
+    }
+    
+    private func nextQuestion() {
+        guard currentQuestionIndex + 1 <= Constansts.costs.count - 1 else {
+            gameOver()
+            return
+        }
+        
+        currentQuestionIndex += 1
+        getNextQuestion()
     }
     
     private func getNextQuestion() {
@@ -214,8 +232,27 @@ extension GameViewModel {
     private func getRemainintIndexes() -> [Int] {
         return currentQuestion?.answers
             .enumerated()
-            .filter { $0.element.state != .correct || $0.element.state != .hidden } // убираем правильный ответ и скрытый по 50/50
+            .filter { $0.element.state != .correct || $0.element.state != .hidden }
             .compactMap { $0.offset } ?? []
+    }
+    
+    private func gameOver(with score: Int? = nil) {
+        var finalScore: Int
+        
+        if let score = score {
+            finalScore = score
+        } else {
+            finalScore = getFinalScore()
+        }
+        
+        if finalScore == Constansts.costs.last {
+            soundService.playSound(.winner)
+        } else {
+            soundService.playSound(.wrong)
+        }
+        
+        self.state = .gameOver(score: finalScore)
+        savingService.updateMaxScore(finalScore)
     }
 }
 
@@ -232,15 +269,15 @@ extension GameViewModel {
     private func loadQuestions() async {
         do {
             let fetchedQuestions = try await networkService.fetchAllQuestions()
-            self.questions = fetchedQuestions // логика мапы по сложности
             
-            guard questions.count >= Constansts.costs.count else {
+            guard fetchedQuestions.count >= Constansts.costs.count else {
                 self.state = .error(message: "Недостаточно вопросов для игры")
                 return
             }
-            
-            self.getNextQuestion()
+             
+            self.questions = fetchedQuestions.sorted { $0.difficulty.intValue < $1.difficulty.intValue}
             self.state = .ready
+            self.newGame()
         }
         catch let error as NetworkError {
             var message: String
@@ -260,5 +297,43 @@ extension GameViewModel {
         catch {
             self.state = .error(message: error.localizedDescription)
         }
+    }
+}
+
+// MARK: - Timer
+
+extension GameViewModel {
+    
+    func startTimer() {
+        stopTimer()
+        
+        timeRemaining = Constansts.secondsForRound
+        
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self = self else { return }
+                
+                if self.timeRemaining > 0 {
+                    self.timeRemaining -= 1
+                } else {
+                    self.stopTimer()
+                    self.handleTimeExpired()
+                }
+            }
+        }
+    }
+    
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+    
+    private func resetTimer() {
+        stopTimer()
+        timeRemaining = Constansts.secondsForRound
+    }
+    
+    private func handleTimeExpired() {
+        gameOver()
     }
 }
