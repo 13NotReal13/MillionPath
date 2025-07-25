@@ -36,7 +36,7 @@ final class NavigationCoordinator: ObservableObject {
         path.append(page)
     }
     
-    func pop(_ page: Page) {
+    func pop() {
         path.removeLast()
     }
     

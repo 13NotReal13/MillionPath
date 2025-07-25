@@ -8,22 +8,18 @@
 import SwiftUI
 
 struct GameView: View {
+    @EnvironmentObject private var coordinator: NavigationCoordinator
     @StateObject private var viewModel = GameViewModel()
-    
-    private let gradientfillColor = LinearGradient(colors: [.blue, .black], startPoint: .top, endPoint: .bottom)
     
     var body: some View {
         ZStack {
-            gradientfillColor
-                .ignoresSafeArea()
-            
             VStack {
                 // Таймер
                 HStack {
                     Image(systemName: "stopwatch.fill")
                         .resizable()
                         .frame(width: 21, height: 21)
-                    Text("\(viewModel.timeRemaining)")
+                    Text("\(viewModel.game.timeRemaining)")
                         .font(.title2)
                         .fontWeight(.bold)
                 }
@@ -36,7 +32,7 @@ struct GameView: View {
                 }
                 
                 // Вопрос
-                Text(viewModel.currentQuestion?.question ?? "")
+                Text(viewModel.game.currentQuestion?.question ?? "")
                     .font(.title3)
                     .multilineTextAlignment(.center)
                     .foregroundColor(.white)
@@ -46,7 +42,7 @@ struct GameView: View {
                 
                 // Варианты ответа
                 VStack(spacing: 16) {
-                    if let question = viewModel.currentQuestion {
+                    if let question = viewModel.game.currentQuestion {
                         ForEach(Array(question.answers.enumerated()), id: \.element.id) { index, answer in
                             AnswerButtonView(index: index, answer: answer)
                                 .onTapGesture {
@@ -59,17 +55,30 @@ struct GameView: View {
                 
                 // Подсказки
                 HStack(spacing: 24) {
-                    HelpButton(icon: Image("50_50"), isUsed: viewModel.wasUsed50)
-                    HelpButton(icon: Image("audience"), isUsed: viewModel.wasUsedExperts)
-                    HelpButton(icon: Image("call"), isUsed: viewModel.wasUsedFriends)
+                    HelpButton(
+                        icon: Image("50_50"),
+                        isUsed: viewModel.game.usedHints.contains(.fiftyFifty)
+                    )
+                    HelpButton(
+                        icon: Image("audience"),
+                        isUsed: viewModel.game.usedHints.contains(.audience)
+                    )
+                    HelpButton(
+                        icon: Image("call"),
+                        isUsed: viewModel.game.usedHints.contains(.friendsHelp)
+                    )
                 }
             }
             .padding()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(BackgroundView())
         .navigationBarBackButtonHidden()
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {}) {
+                Button {
+                    coordinator.pop()
+                } label: {
                     Image(systemName: "arrow.left")
                         .foregroundColor(.white)
                 }
@@ -80,7 +89,7 @@ struct GameView: View {
                     Text("QUESTION #")
                         .foregroundColor(.white)
                         .font(.caption)
-                    Text("$\(viewModel.currentQuestion?.cost ?? 0)")
+                    Text("$\(viewModel.game.currentQuestion?.cost ?? 0)")
                         .foregroundColor(.white)
                         .bold()
                 }
@@ -99,6 +108,7 @@ struct GameView: View {
 
 #Preview {
     GameView()
+        .environmentObject(NavigationCoordinator.shared)
 }
 
 
