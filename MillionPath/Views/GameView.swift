@@ -27,29 +27,14 @@ struct GameView: View {
                         .frame(width: 21, height: 21)
                     Text("\(timeRemaining)")
                         .font(.title2)
+                        .fontWeight(.bold)
                 }
                 .foregroundStyle(.white)
-                
-                .background {
-                    Capsule().fill(Color.red.opacity(0.7))
+                .overlay {
+                    Capsule().fill(Color.white.opacity(0.5))
                         .frame(width: 91, height: 45)
                         .padding(.vertical, 8)
                         .padding(.horizontal, 16)
-                }
-                
-                ZStack {
-                    Capsule().fill(Color.red.opacity(0.5))
-                        .frame(width: 91, height: 45)
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 16)
-                    HStack {
-                        Image("stopwatch")
-                            .foregroundStyle(.red)
-
-                        Text("\(timeRemaining)")
-                            .foregroundStyle(.red)
-                            .font(.title2)
-                    }
                 }
                 
                 // Вопрос
@@ -129,13 +114,16 @@ struct AnswerButtonView: View {
         Text("\(letter): \(answer.answer)")
             .font(.system(size: 20, weight: .semibold))
             .foregroundColor(.white)
-            .frame(width: 311, height: 62)
+            .padding(.vertical)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 32)
             .background(gradient(for: answer.state))
             .clipShape(CustomButtonShape())
             .overlay(
                 CustomButtonShape()
                     .stroke(Color.white, lineWidth: 4)
             )
+            .padding(.horizontal)
         //            .opacity(answer.state == .hidden ? 1 : 1.0)
     }
     
