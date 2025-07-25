@@ -9,86 +9,103 @@ import SwiftUI
 
 struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
-
+    
     private let timeRemaining = 30
-
+    
     private let gradientfillColor = LinearGradient(colors: [.blue, .black], startPoint: .top, endPoint: .bottom)
-
+    
     var body: some View {
-        NavigationStack {
-            ZStack {
-                gradientfillColor
-                    .ignoresSafeArea()
+        ZStack {
+            gradientfillColor
+                .ignoresSafeArea()
+            
+            VStack {
+                // Таймер
+                HStack {
+                    Image(systemName: "stopwatch.fill")
+                        .resizable()
+                        .frame(width: 21, height: 21)
+                    Text("\(timeRemaining)")
+                        .font(.title2)
+                }
+                .foregroundStyle(.white)
+                
+                .background {
+                    Capsule().fill(Color.red.opacity(0.7))
+                        .frame(width: 91, height: 45)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                }
+                
+                ZStack {
+                    Capsule().fill(Color.red.opacity(0.5))
+                        .frame(width: 91, height: 45)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
+                    HStack {
+                        Image("stopwatch")
+                            .foregroundStyle(.red)
 
-                VStack {
-                    // Таймер
-                    ZStack {
-                        Capsule().fill(Color.white.opacity(0.2))
-                            .frame(width: 91, height: 45)
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 16)
-                        HStack {
-                            Image(.stopwatch)
-                            Text("\(timeRemaining)")
-                                .foregroundStyle(.white)
-                                .font(.title2)
-                        }
-                    }
-
-                    // Вопрос
-                    Text(viewModel.currentQuestion?.question ?? "")
-                        .font(.title3)
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.white)
-                        .frame(height: 147)
-                        .padding(.horizontal)
-                        .padding(.bottom, 32)
-
-                    // Варианты ответа
-                    VStack(spacing: 16) {
-                        if let question = viewModel.currentQuestion {
-                            ForEach(Array(question.answers.enumerated()), id: \.element.id) { index, answer in
-                                AnswerButtonView(index: index, answer: answer)
-                                    .onTapGesture {
-                                        viewModel.selectAnswer(id: answer.id)
-                                    }
-                            }
-                        }
-                    }
-                    .padding(.bottom, 40)
-
-                    // Подсказки
-                    HStack(spacing: 24) {
-                        HelpButton(icon: Image(._50_50), isUsed: viewModel.wasUsed50)
-                        HelpButton(icon: Image(.audience), isUsed: viewModel.wasUsedExperts)
-                        HelpButton(icon: Image(.call), isUsed: viewModel.wasUsedFriends)
+                        Text("\(timeRemaining)")
+                            .foregroundStyle(.red)
+                            .font(.title2)
                     }
                 }
-                .padding()
+                
+                // Вопрос
+                Text(viewModel.currentQuestion?.question ?? "")
+                    .font(.title3)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.white)
+                    .frame(height: 147)
+                    .padding(.horizontal)
+                    .padding(.bottom, 32)
+                
+                // Варианты ответа
+                VStack(spacing: 16) {
+                    if let question = viewModel.currentQuestion {
+                        ForEach(Array(question.answers.enumerated()), id: \.element.id) { index, answer in
+                            AnswerButtonView(index: index, answer: answer)
+                                .onTapGesture {
+                                    viewModel.selectAnswer(id: answer.id)
+                                }
+                        }
+                    }
+                }
+                .padding(.bottom, 40)
+                
+                // Подсказки
+                HStack(spacing: 24) {
+                    HelpButton(icon: Image("50_50"), isUsed: viewModel.wasUsed50)
+                    HelpButton(icon: Image("audience"), isUsed: viewModel.wasUsedExperts)
+                    HelpButton(icon: Image("call"), isUsed: viewModel.wasUsedFriends)
+                }
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {}) {
-                        Image(systemName: "arrow.left")
-                            .foregroundColor(.white)
-                    }
-                }
-
-                ToolbarItem(placement: .principal) {
-                    VStack(spacing: 4) {
-                        Text("QUESTION #\(viewModel.currentQuestionIndex + 1)")
-                            .foregroundColor(.white)
-                            .font(.caption)
-                        Text("$\(viewModel.currentQuestion?.cost ?? 0)")
-                            .foregroundColor(.white)
-                            .bold()
-                    }
-                }
-
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Image(.barChart)
+            .padding()
+        }
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {}) {
+                    Image(systemName: "arrow.left")
                         .foregroundColor(.white)
                 }
+            }
+            
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 4) {
+                    Text("QUESTION #\(viewModel.currentQuestionIndex + 1)")
+                        .foregroundColor(.white)
+                        .font(.caption)
+                    Text("$\(viewModel.currentQuestion?.cost ?? 0)")
+                        .foregroundColor(.white)
+                        .bold()
+                }
+            }
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Image("barChart")
+                    .foregroundColor(.white)
             }
         }
         .onAppear {
@@ -105,10 +122,10 @@ struct GameView: View {
 struct AnswerButtonView: View {
     let index: Int
     let answer: CurrentQuestion.Answer
-
+    
     var body: some View {
         let letter = ["A", "B", "C", "D"][index]
-
+        
         Text("\(letter): \(answer.answer)")
             .font(.system(size: 20, weight: .semibold))
             .foregroundColor(.white)
@@ -119,9 +136,9 @@ struct AnswerButtonView: View {
                 CustomButtonShape()
                     .stroke(Color.white, lineWidth: 4)
             )
-//            .opacity(answer.state == .hidden ? 1 : 1.0)
+        //            .opacity(answer.state == .hidden ? 1 : 1.0)
     }
-
+    
     private func gradient(for state: CurrentQuestion.Answer.QuestionState) -> LinearGradient {
         switch state {
         case .hidden:

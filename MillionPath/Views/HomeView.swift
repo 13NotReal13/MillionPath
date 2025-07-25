@@ -33,7 +33,7 @@ struct HomeView: View {
                 Spacer()
                 
                 Button(action: {
-                    
+                    coordinator.push(.game)
                 }) {
                     Text("New Game")
                         .font(.system(size: 20, weight: .semibold))

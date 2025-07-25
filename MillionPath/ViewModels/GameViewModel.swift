@@ -122,9 +122,9 @@ extension GameViewModel {
         wasUsedFriends = false
         wasUsedExperts = false
         
-        Task {
-            await reloadQuestions()
-        }
+//        Task {
+//            await reloadQuestions()
+//        }
     }
     
     /// Подсказка 50/50
