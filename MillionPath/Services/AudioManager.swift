@@ -5,14 +5,31 @@
 //  Created by Иван Семикин on 21/07/2025.
 //
 
-import Foundation
 import AVFoundation
 
-class AudioManager: ObservableObject {
-    private var player: AVAudioPlayer?
+enum Sounds: String {
+    case correct = "correctAnswer"
+    case waiting = "waitingSound"
+    case wrong = "wrongAnswer"
+    case winner = "millionWin"
+    case start = "startGame"
+}
 
-    func playSound(named name: String, withExtension ext: String = "mp3") {
-        guard let url = Bundle.main.url(forResource: name, withExtension: ext) else {
+protocol AudioManagerProtocol {
+    func playSound(_ sound: Sounds)
+}
+
+final class AudioManager: AudioManagerProtocol {
+    static let shared = AudioManager()
+    
+    private var player: AVAudioPlayer?
+    
+    private init() {}
+    
+    func playSound(_ sound: Sounds) {
+        stop()
+        
+        guard let url = Bundle.main.url(forResource: sound.rawValue, withExtension: "mp3") else {
             print("Аудиофайл не найден")
             return
         }
@@ -24,7 +41,7 @@ class AudioManager: ObservableObject {
         }
     }
     
-    func stop() {
+    private func stop() {
         player?.stop()
     }
 }
