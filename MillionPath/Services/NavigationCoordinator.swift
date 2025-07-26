@@ -20,27 +20,37 @@ enum Page: String, Identifiable {
 
 enum Sheet: Identifiable {
     case rules
-//    case audienceHelp(String)
+    case audienceHelp(votes: [AudienceVote])
     case friendHelp(String)
     
     var id: String {
         switch self {
         case .rules:
             return "rules"
-//        case .audienceHelp(let answer):
-//            return "audienceHelp_\(answer)"
+        case .audienceHelp:
+            return "audienceHelp_"
         case .friendHelp(let answer):
             return "friendHelp_\(answer)"
         }
     }
 }
 
-enum FullScreenCover: String, Identifiable {
+enum FullScreenCover: Identifiable {
     case menuGame
-    case progressGame
+    case progressGame(
+        currentQuestion: Int,
+        isGameOver: Bool,
+        lastAnsweredIndex: Int?,
+        isLastAnswerCorrect: Bool?
+    )
     
     var id: String {
-        self.rawValue
+        switch self {
+        case .menuGame:
+            return "menuGame"
+        case .progressGame:
+            return "progressGame"
+        }
     }
 }
 
@@ -99,9 +109,9 @@ final class NavigationCoordinator: ObservableObject {
         switch sheet {
         case .rules:
             RulesView()
-//        case .audienceHelp(let answer):
-//            AudienceHelpView(answer: answer)
-//                .presentationDetents([.medium])
+        case .audienceHelp(let votes):
+            AudienceHelpView(votes: votes)
+                .presentationDetents([.medium])
         case .friendHelp(let answer):
             FriendHelpView(answer: answer)
                 .presentationDetents([.medium])
@@ -113,8 +123,18 @@ final class NavigationCoordinator: ObservableObject {
         switch fullScreenCover {
         case .menuGame:
             MenuGameView()
-        case .progressGame:
-            EmptyView()
+        case .progressGame(
+            let currentQuestion,
+            let isGameOver,
+            let lastAnsweredIndex,
+            let isLastAnswerCorrect
+        ):
+            ProgressGameView(
+                currentStep: currentQuestion,
+                isGameOver: isGameOver,
+                lastAnsweredIndex: lastAnsweredIndex,
+                isLastAnswerCorrect: isLastAnswerCorrect
+            )
         }
     }
 }
