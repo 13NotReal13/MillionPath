@@ -142,76 +142,66 @@ extension GameViewModel {
         guard newGame.currentQuestionIndex < newGame.questions.count else { return }
         var question = newGame.questions[newGame.currentQuestionIndex]
 
-        let indexesToRemove = question.answers
-            .enumerated()
-            .filter { $0.element.state != .correct }
+        // Находим неверные ответы
+        let incorrectIndices = question.answers.enumerated()
+            .filter { !$0.element.isCorrect && $0.element.state != .hidden }
             .map { $0.offset }
             .shuffled()
             .prefix(2)
 
-        for i in indexesToRemove {
-            question.answers[i].state = .hidden
+        // Скрываем 2 неверных
+        for index in incorrectIndices {
+            question.answers[index].state = .hidden
         }
+
         newGame.questions[newGame.currentQuestionIndex] = question
         newGame.usedHints.insert(.fiftyFifty)
         game = newGame
     }
     
     /// Звонок другу
-    func getFriendsHelp() {
+    func getFriendsHelp() -> String {
         var newGame = game
-        guard newGame.currentQuestionIndex < newGame.questions.count else { return }
-        var question = newGame.questions[newGame.currentQuestionIndex]
+        guard newGame.currentQuestionIndex < newGame.questions.count else { return "" }
+        let question = newGame.questions[newGame.currentQuestionIndex]
 
-        if Double.random(in: 0...1) < Constants.friendsProbability {
-            if let rightAnswerIndex = question.answers.firstIndex(where: { $0.state == .correct }) {
-                question.answers[rightAnswerIndex].state = .friendsAnswer
-            }
+        let isCorrect = Double.random(in: 0...1) < 0.8
+
+        let answerText: String
+
+        if isCorrect {
+            answerText = question.answers.first(where: { $0.isCorrect })?.answer ?? ""
         } else {
-            if let wrongAnswerIndex = question.answers.firstIndex(where: { $0.state == .incorrect }) {
-                question.answers[wrongAnswerIndex].state = .friendsAnswer
-            }
+            let incorrects = question.answers.filter { !$0.isCorrect && $0.state != .hidden }
+            answerText = incorrects.randomElement()?.answer ?? ""
         }
 
-        newGame.questions[newGame.currentQuestionIndex] = question
         newGame.usedHints.insert(.friendsHelp)
         game = newGame
+        return answerText
     }
     
     /// Помощь зала
-    func getExpertHelp() -> [ExpertsHelpModel] {
+    func getExpertHelp() -> String {
         var newGame = game
-        guard newGame.currentQuestionIndex < newGame.questions.count else { return [] }
+        guard newGame.currentQuestionIndex < newGame.questions.count else { return "" }
         let question = newGame.questions[newGame.currentQuestionIndex]
 
-        guard let rightAnswerIndex = question.answers.firstIndex(where: { $0.state == .correct }) else { return [] }
+        let probability = 0.7
+        let isCorrect = Double.random(in: 0...1) < probability
 
-        let probability = question.isHard ? Constants.expertsHardProbability : Constants.expertsEasyProbability
-        var expertsHelp: [ExpertsHelpModel] = []
+        let answerText: String
 
-        expertsHelp.append(
-            ExpertsHelpModel(
-                answer: question.answers[rightAnswerIndex].answer,
-                probability: probability
-            )
-        )
-
-        let remainingProbability = 1.0 - probability
-
-        let incorrects = question.answers.filter { $0.state == .incorrect || $0.state == .friendsAnswer }
-
-        for i in incorrects {
-            expertsHelp.append(
-                ExpertsHelpModel(
-                    answer: i.answer,
-                    probability: remainingProbability / Double(incorrects.count == 0 ? 1 : incorrects.count)
-                )
-            )
+        if isCorrect {
+            answerText = question.answers.first(where: { $0.isCorrect })?.answer ?? ""
+        } else {
+            let incorrects = question.answers.filter { !$0.isCorrect && $0.state != .hidden }
+            answerText = incorrects.randomElement()?.answer ?? ""
         }
 
         newGame.usedHints.insert(.audience)
         game = newGame
-        return expertsHelp
+        return answerText
     }
     
     /// Забрать выйгрыш
@@ -265,6 +255,9 @@ extension GameViewModel {
             }
             self.game = Game(questions: currentQuestions)
             self.state = .ready
+            //
+            self.startTimer()
+            self.soundService.playSound(.start)
         }
         catch let error as NetworkError {
             var message: String
