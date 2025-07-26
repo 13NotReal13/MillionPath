@@ -21,6 +21,8 @@ class NetworkService: NetworkServiceProtocol {
         static let typeKey = "type"
         static let typeValue = "multiple"
         static let difficultyKey = "difficulty"
+        static let encodeKey = "encode"
+        static let encodeValue = "url3986"
     }
     
     private init() {}
@@ -38,7 +40,8 @@ class NetworkService: NetworkServiceProtocol {
             }
             
             for try await response in group {
-                allQuestions.append(contentsOf: response.results)
+                let decodedQuestions = response.results.map { $0.decoded }
+                allQuestions.append(contentsOf: decodedQuestions)
             }
         }
         
@@ -52,7 +55,8 @@ class NetworkService: NetworkServiceProtocol {
         
         components.queryItems = [
             URLQueryItem(name: Constants.amountKey, value: Constants.amountValue),
-            URLQueryItem(name: Constants.typeKey, value: Constants.typeValue)
+            URLQueryItem(name: Constants.typeKey, value: Constants.typeValue),
+            URLQueryItem(name: Constants.encodeKey, value: Constants.encodeValue)
         ]
         
         if let difficulty {
@@ -62,9 +66,7 @@ class NetworkService: NetworkServiceProtocol {
         guard let finalURL = components.url else {
             throw NetworkError.invalidURL
         }
-        
-        print("final url", finalURL)
-        
+                        
         let request = URLRequest(url: finalURL)
         
         do {
