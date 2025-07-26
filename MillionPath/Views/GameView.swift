@@ -39,7 +39,7 @@ struct GameView: View {
                 
                 // Подсказки
                 HStack(spacing: 24) {
-                    HelpButton(icon: Image("50_50"), isUsed: viewModel.game.usedHints.contains(.fiftyFifty))
+                    HelpButtonView(icon: Image("50_50"), isUsed: viewModel.game.usedHints.contains(.fiftyFifty))
                         .onTapGesture {
                             if !viewModel.game.usedHints.contains(.fiftyFifty) {
                                 viewModel.get50_50Help()
@@ -47,7 +47,7 @@ struct GameView: View {
                         }
                         .disabled(viewModel.game.usedHints.contains(.fiftyFifty))
                     
-                    HelpButton(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
+                    HelpButtonView(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
                         .onTapGesture {
                             if let result = viewModel.useAudienceHintIfNeeded() {
                                 audienceAnswer = result
@@ -56,7 +56,7 @@ struct GameView: View {
                         }
                         .disabled(viewModel.game.usedHints.contains(.audience))
                     
-                    HelpButton(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
+                    HelpButtonView(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
                         .onTapGesture {
                             if let result = viewModel.useFriendHintIfNeeded() {
                                 friendAnswer = result
@@ -79,6 +79,7 @@ struct GameView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
+                    viewModel.stopGame()
                     coordinator.pop()
                 } label: {
                     Image(systemName: "arrow.left")
@@ -133,19 +134,26 @@ struct AnswerButtonView: View {
     var body: some View {
         let letter = ["A", "B", "C", "D"][index]
         
-        Text("\(letter): \(answer.answer)")
-            .font(.system(size: 20, weight: .semibold))
-            .foregroundColor(.white)
-            .padding(.vertical)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 32)
-            .background(gradient(for: answer.state))
-            .clipShape(CustomButtonShape())
-            .overlay(
-                CustomButtonShape()
-                    .stroke(Color.white, lineWidth: 4)
-            )
-            .padding(.horizontal)
+        HStack(alignment: .center, spacing: 0) {
+            Text("\(letter): ")
+                .foregroundColor(.orange)
+            
+            Text(answer.answer)
+                .foregroundColor(.white)
+            
+            Spacer()
+        }
+        .font(.system(size: 20, weight: .semibold))
+        .padding(.vertical)
+        .padding(.leading, 32)
+        .frame(maxWidth: .infinity)
+        .background(gradient(for: answer.state))
+        .clipShape(CustomButtonShape())
+        .overlay(
+            CustomButtonShape()
+                .stroke(Color.white, lineWidth: 4)
+        )
+        .padding(.horizontal)
     }
     
     private func gradient(for state: CurrentQuestion.Answer.QuestionState) -> LinearGradient {
@@ -166,7 +174,7 @@ struct AnswerButtonView: View {
     }
 }
 
-struct HelpButton: View {
+struct HelpButtonView: View {
     var icon: Image
     var isUsed: Bool
     
@@ -177,3 +185,15 @@ struct HelpButton: View {
             .opacity(isUsed ? 0.5 : 1.0)
     }
 }
+
+
+//struct friendAnswer: View {
+//    var body: some View {
+//        ZStack {
+//            VStack {
+//                Text("Звонок другу").font(.title).padding()
+//                Text("Друг считает, что правильный ответ: \(friendAnswer)")
+//            }
+//        }
+//    }
+//}

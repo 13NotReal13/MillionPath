@@ -131,9 +131,30 @@ extension GameViewModel {
     }
     
     func newGame() {
-        game.currentQuestionIndex = 0
-        soundService.playSound(.start)
-        startTimer()
+            userInteractionEnable = true
+            soundService.playSound(.start)
+            startTimer()
+    }
+    
+    func stopGame() {
+        Task {
+            await loadQuestions()
+        }
+        stopTimer()
+        userInteractionEnable = false
+        AudioManager.shared.stop()
+
+        // Сбросить состояние подсказок и вопросов
+        var newGame = game
+        newGame.usedHints = []
+        
+        for i in 0..<newGame.questions.count {
+            for j in 0..<newGame.questions[i].answers.count {
+                newGame.questions[i].answers[j].state = .normal
+            }
+        }
+        newGame.currentQuestionIndex = 0
+        game = newGame
     }
     
     /// Подсказка 50/50
