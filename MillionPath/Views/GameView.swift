@@ -48,13 +48,14 @@ struct GameView: View {
                             coordinator.present(sheet: .audienceHelp(viewModel.audienceAnswer))
                         }
                         .disabled(viewModel.game.usedHints.contains(.audience))
-
+                    
                     
                     HelpButtonView(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
                         .onTapGesture {
-                                viewModel.useFriendHintIfNeeded()
-                            }
-                            .disabled(viewModel.game.usedHints.contains(.friendsHelp))
+                            viewModel.useFriendHintIfNeeded()
+                            coordinator.present(sheet: .friendHelp(viewModel.friendAnswer))
+                        }
+                        .disabled(viewModel.game.usedHints.contains(.friendsHelp))
                 }
             }
             .padding()
@@ -93,10 +94,6 @@ struct GameView: View {
                 Image("barChart")
                     .foregroundColor(.white)
             }
-        }
-        .sheet(isPresented: $viewModel.showFriendHelp) {
-            FriendHelpView(answer: viewModel.friendAnswer)
-            .presentationDetents([.medium])
         }
     }
 }
@@ -172,7 +169,7 @@ struct HelpButtonView: View {
 
 struct AudienceHelpView: View {
     let answer: String
-
+    
     var body: some View {
         ZStack {
             BackgroundView()
@@ -203,7 +200,7 @@ struct AudienceHelpView: View {
 
 struct FriendHelpView: View {
     let answer: String
-
+    
     var body: some View {
         ZStack {
             BackgroundView()
