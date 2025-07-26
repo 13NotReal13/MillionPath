@@ -72,6 +72,10 @@ struct GameView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(BackgroundView())
         .navigationBarBackButtonHidden()
+        
+        .onAppear{
+            viewModel.newGame()
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
