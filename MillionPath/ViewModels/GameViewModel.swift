@@ -273,17 +273,7 @@ extension GameViewModel {
         }) ?? 0
     }
     
-    private func nextQuestion() {
-        guard game.currentQuestionIndex + 1 <= Constants.costs.count - 1 else {
-            gameOver()
-            return
-        }
-        
-        game.currentQuestionIndex += 1
-        game.timeRemaining = Constants.secondsForRound
-    }
-    
-    private func gameOver(with score: Int? = nil) {
+    func gameOver(with score: Int? = nil) {
         var finalScore: Int
         
         if let score = score {
@@ -294,6 +284,16 @@ extension GameViewModel {
         
         self.state = .gameOver(score: finalScore)
         savingService.updateMaxScore(finalScore)
+    }
+    
+    private func nextQuestion() {
+        guard game.currentQuestionIndex + 1 <= Constants.costs.count - 1 else {
+            gameOver()
+            return
+        }
+        
+        game.currentQuestionIndex += 1
+        game.timeRemaining = Constants.secondsForRound
     }
 }
 

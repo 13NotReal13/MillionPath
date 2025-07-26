@@ -17,6 +17,7 @@ struct HomeView: View {
             VStack(spacing: 16) {
                 Spacer()
                 Image("Logo")
+                    .resizable()
                     .frame(width: 195.0, height: 195.0)
                 
                 Text("Who Wants \nto be a Millionair")

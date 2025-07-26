@@ -23,6 +23,17 @@ struct ProgressGameView: View {
         ZStack {
             VStack {
                 HStack {
+                    Button {
+                        viewModel.takeMoneyNow()
+                        coordinator.dismissFullScreenCover()
+                    } label: {
+                        Image(systemName: "creditcard")
+                            .resizable()
+                            .frame(width: 30, height: 20)
+                            .foregroundStyle(.white)
+                    }
+                    .padding(.horizontal, 32)
+                    
                     Spacer()
                     
                     Button {
@@ -55,6 +66,15 @@ struct ProgressGameView: View {
                         isLose: isLose
                     )
                 }
+            }
+            
+            VStack {
+                Image("Logo")
+                    .resizable()
+                    .clipped()
+                    .frame(width: 130, height: 130)
+                
+                Spacer()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -99,8 +119,8 @@ struct StepProgressView: View {
 
 #Preview {
     ProgressGameView(
-        currentStep: 10,
-        isGameOver: true,
+        currentStep: 12,
+        isGameOver: false,
         lastAnsweredIndex: 3,
         isLastAnswerCorrect: true
     )

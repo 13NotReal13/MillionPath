@@ -97,7 +97,15 @@ struct GameView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     viewModel.pauseGame()
-                    coordinator.present(fullScreenCover: .progressGame)
+                    coordinator.present(
+                        fullScreenCover: .progressGame(
+                            currentQuestion: viewModel.game.currentQuestionIndex + 1,
+                            isGameOver: false,
+                            lastAnsweredIndex:
+                                nil,
+                            isLastAnswerCorrect: nil
+                        )
+                    )
                 } label: {
                     Image("barChart")
                         .foregroundColor(.white)
