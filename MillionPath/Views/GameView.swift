@@ -11,6 +11,11 @@ struct GameView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
     @EnvironmentObject private var viewModel: GameViewModel
     
+    @State private var showAudienceHelp = false
+    @State private var audienceAnswer: String = ""
+    @State private var showFriendHelp = false
+    @State private var friendAnswer: String = ""
+    
     var body: some View {
         ZStack {
             VStack {
@@ -34,18 +39,20 @@ struct GameView: View {
                 
                 // Подсказки
                 HStack(spacing: 24) {
-                    HelpButton(
-                        icon: Image("50_50"),
-                        isUsed: viewModel.game.usedHints.contains(.fiftyFifty)
-                    )
-                    HelpButton(
-                        icon: Image("audience"),
-                        isUsed: viewModel.game.usedHints.contains(.audience)
-                    )
-                    HelpButton(
-                        icon: Image("call"),
-                        isUsed: viewModel.game.usedHints.contains(.friendsHelp)
-                    )
+                    HelpButton(icon: Image("50_50"), isUsed: viewModel.game.usedHints.contains(.fiftyFifty))
+                        .onTapGesture {
+                            viewModel.get50_50Help()
+                        }
+                    HelpButton(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
+                        .onTapGesture {
+                            audienceAnswer = viewModel.getExpertHelp()
+                            showAudienceHelp = true
+                        }
+                    HelpButton(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
+                        .onTapGesture {
+                            friendAnswer = viewModel.getFriendsHelp()
+                            showFriendHelp = true
+                        }
                 }
             }
             .padding()
@@ -80,8 +87,20 @@ struct GameView: View {
                     .foregroundColor(.white)
             }
         }
-        .onAppear {
-            viewModel.newGame()
+        .sheet(isPresented: $showAudienceHelp) {
+            VStack {
+                Text("Помощь зала").font(.title).padding()
+                Text("Зал считает, что правильный ответ: \(audienceAnswer)")
+            }
+            .presentationDetents([.medium])
+        }
+        .sheet(isPresented: $showFriendHelp) {
+            VStack {
+                Text("Звонок другу").font(.title).padding()
+                Text("Друг считает, что правильный ответ: \(friendAnswer)")
+            }
+            .presentationDetents([.medium])
+            
         }
     }
 }
@@ -144,5 +163,6 @@ struct HelpButton: View {
         icon
             .padding()
             .frame(width: 84, height: 64)
+            .opacity(isUsed ? 0.5 : 1.0)
     }
 }
