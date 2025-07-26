@@ -34,9 +34,19 @@ enum Sheet: Identifiable {
     }
 }
 
+enum FullScreenCover: String, Identifiable {
+    case menuGame
+    case progressGame
+    
+    var id: String {
+        self.rawValue
+    }
+}
+
 final class NavigationCoordinator: ObservableObject {
     @Published var path = NavigationPath()
     @Published var sheet: Sheet?
+    @Published var fullScreenCover: FullScreenCover?
     
     static let shared = NavigationCoordinator()
     private init() {}
@@ -50,6 +60,8 @@ final class NavigationCoordinator: ObservableObject {
     }
     
     func popToRoot() {
+        dismissSheet()
+        dismissFullScreenCover()
         path.removeLast(path.count)
     }
     
@@ -59,6 +71,14 @@ final class NavigationCoordinator: ObservableObject {
     
     func dismissSheet() {
         sheet = nil
+    }
+    
+    func present(fullScreenCover: FullScreenCover) {
+        self.fullScreenCover = fullScreenCover
+    }
+    
+    func dismissFullScreenCover() {
+        fullScreenCover = nil
     }
     
     @ViewBuilder
@@ -82,6 +102,16 @@ final class NavigationCoordinator: ObservableObject {
         case .friendHelp(let answer):
             FriendHelpView(answer: answer)
                 .presentationDetents([.medium])
+        }
+    }
+    
+    @ViewBuilder
+    func build(fullScreenCover: FullScreenCover) -> some View {
+        switch fullScreenCover {
+        case .menuGame:
+            MenuGameView()
+        case .progressGame:
+            EmptyView()
         }
     }
 }

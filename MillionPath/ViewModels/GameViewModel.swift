@@ -57,7 +57,7 @@ class GameViewModel: ObservableObject {
     private let soundService: AudioManagerProtocol
     
     private var timer: Timer?
-   
+    
     init(
         networkService: NetworkServiceProtocol = NetworkService.shared,
         savingService: SaveResultServiceProtocol = SaveResultService.shared,
@@ -70,7 +70,7 @@ class GameViewModel: ObservableObject {
         
         Task {
             await loadQuestions()
-        }        
+        }
     }
 }
 
@@ -84,28 +84,28 @@ extension GameViewModel {
               questionIndex < newGame.questions.count else { return }
         var question = newGame.questions[questionIndex]
         guard let selectedIndex = question.answers.firstIndex(where: { $0.id == id }) else { return }
-
+        
         for index in question.answers.indices {
             question.answers[index].state = (index == selectedIndex) ? .selected : .normal
         }
         newGame.questions[questionIndex] = question
         game = newGame
-
+        
         userInteractionEnable = false
         stopTimer()
         soundService.playSound(.waiting)
-
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
             self?.revealAnswer(selectedIndex: selectedIndex)
         }
     }
-
+    
     func revealAnswer(selectedIndex: Int) {
         var newGame = game
         let questionIndex = newGame.currentQuestionIndex
         var question = newGame.questions[questionIndex]
         guard let correctIndex = question.answers.firstIndex(where: { $0.isCorrect }) else { return }
-
+        
         if selectedIndex == correctIndex {
             question.answers[selectedIndex].state = .correct
             soundService.playSound(.correct)
@@ -120,7 +120,7 @@ extension GameViewModel {
         }
         newGame.questions[questionIndex] = question
         game = newGame
-
+        
         // Переход к следующему вопросу или конец игры
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             guard let self = self else { return }
@@ -136,9 +136,11 @@ extension GameViewModel {
     }
     
     func newGame() {
-            userInteractionEnable = true
-            soundService.playSound(.start)
-            startTimer()
+        userInteractionEnable = true
+        soundService.playSound(.start)
+        game.currentQuestionIndex = 0
+        game.timeRemaining = Constants.secondsForRound
+        startTimer()
     }
     
     func stopGame() {
@@ -148,7 +150,7 @@ extension GameViewModel {
         stopTimer()
         userInteractionEnable = false
         AudioManager.shared.stop()
-
+        
         // Сбросить состояние подсказок и вопросов
         var newGame = game
         newGame.usedHints = []
@@ -162,24 +164,29 @@ extension GameViewModel {
         game = newGame
     }
     
+    func continueGame() {
+        userInteractionEnable = true
+        startTimer()
+    }
+    
     /// Подсказка 50/50
     func get50_50Help() {
         var newGame = game
         guard newGame.currentQuestionIndex < newGame.questions.count else { return }
         var question = newGame.questions[newGame.currentQuestionIndex]
-
+        
         // Находим неверные ответы
         let incorrectIndices = question.answers.enumerated()
             .filter { !$0.element.isCorrect && $0.element.state != .hidden }
             .map { $0.offset }
             .shuffled()
             .prefix(2)
-
+        
         // Скрываем 2 неверных
         for index in incorrectIndices {
             question.answers[index].state = .hidden
         }
-
+        
         newGame.questions[newGame.currentQuestionIndex] = question
         newGame.usedHints.insert(.fiftyFifty)
         game = newGame
@@ -190,18 +197,18 @@ extension GameViewModel {
         var newGame = game
         guard newGame.currentQuestionIndex < newGame.questions.count else { return "" }
         let question = newGame.questions[newGame.currentQuestionIndex]
-
+        
         let isCorrect = Double.random(in: 0...1) < 0.8
-
+        
         let answerText: String
-
+        
         if isCorrect {
             answerText = question.answers.first(where: { $0.isCorrect })?.answer ?? ""
         } else {
             let incorrects = question.answers.filter { !$0.isCorrect && $0.state != .hidden }
             answerText = incorrects.randomElement()?.answer ?? ""
         }
-
+        
         newGame.usedHints.insert(.friendsHelp)
         game = newGame
         return answerText
@@ -212,42 +219,42 @@ extension GameViewModel {
         var newGame = game
         guard newGame.currentQuestionIndex < newGame.questions.count else { return "" }
         let question = newGame.questions[newGame.currentQuestionIndex]
-
+        
         let probability = 0.7
         let isCorrect = Double.random(in: 0...1) < probability
-
+        
         let answerText: String
-
+        
         if isCorrect {
             answerText = question.answers.first(where: { $0.isCorrect })?.answer ?? ""
         } else {
             let incorrects = question.answers.filter { !$0.isCorrect && $0.state != .hidden }
             answerText = incorrects.randomElement()?.answer ?? ""
         }
-
+        
         newGame.usedHints.insert(.audience)
         game = newGame
         return answerText
     }
     
-
+    
     /// Проверка: была ли подсказка использована
     func useFiftyFiftyHintIfNeeded() {
-         guard !game.usedHints.contains(.fiftyFifty) else { return }
-         get50_50Help()
-     }
-
-     func useAudienceHintIfNeeded() {
-         guard !game.usedHints.contains(.audience) else { return }
-         audienceAnswer = getExpertHelp()
-         showAudienceHelp = true
-     }
-
-     func useFriendHintIfNeeded() {
-         guard !game.usedHints.contains(.friendsHelp) else { return }
-         friendAnswer = getFriendsHelp()
-         showFriendHelp = true
-     }
+        guard !game.usedHints.contains(.fiftyFifty) else { return }
+        get50_50Help()
+    }
+    
+    func useAudienceHintIfNeeded() {
+        guard !game.usedHints.contains(.audience) else { return }
+        audienceAnswer = getExpertHelp()
+        showAudienceHelp = true
+    }
+    
+    func useFriendHintIfNeeded() {
+        guard !game.usedHints.contains(.friendsHelp) else { return }
+        friendAnswer = getFriendsHelp()
+        showFriendHelp = true
+    }
     
     
     /// Забрать выйгрыш
@@ -268,6 +275,7 @@ extension GameViewModel {
         }
         
         game.currentQuestionIndex += 1
+        game.timeRemaining = Constants.secondsForRound
     }
     
     private func gameOver(with score: Int? = nil) {
@@ -294,7 +302,7 @@ extension GameViewModel {
                 self.state = .error(message: "Недостаточно вопросов для игры")
                 return
             }
-             
+            
             let sorted = fetchedQuestions.sorted { $0.difficulty.intValue < $1.difficulty.intValue }
             let currentQuestions = (0..<Constants.costs.count).map { index in
                 CurrentQuestion(model: sorted[index], cost: Constants.costs[index])
@@ -302,11 +310,11 @@ extension GameViewModel {
             self.game = Game(questions: currentQuestions)
             self.state = .ready
             //
-//            self.startTimer()
-//            self.soundService.playSound(.start)
+            //            self.startTimer()
+            //            self.soundService.playSound(.start)
             
-//            newGame()
-
+            //            newGame()
+            
             
             
         }
@@ -335,8 +343,6 @@ extension GameViewModel {
 extension GameViewModel {
     private func startTimer() {
         stopTimer()
-        
-        game.timeRemaining = Constants.secondsForRound
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in

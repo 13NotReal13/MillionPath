@@ -64,7 +64,6 @@ struct GameView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(BackgroundView())
         .navigationBarBackButtonHidden()
-        
         .onAppear{
             viewModel.newGame()
         }
@@ -72,7 +71,7 @@ struct GameView: View {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     viewModel.stopGame()
-                    coordinator.pop()
+                    coordinator.present(fullScreenCover: .menuGame)
                 } label: {
                     Image(systemName: "arrow.left")
                         .foregroundColor(.white)
@@ -91,8 +90,13 @@ struct GameView: View {
             }
             
             ToolbarItem(placement: .navigationBarTrailing) {
-                Image("barChart")
-                    .foregroundColor(.white)
+                Button {
+                    viewModel.stopGame()
+                    coordinator.present(fullScreenCover: .progressGame)
+                } label: {
+                    Image("barChart")
+                        .foregroundColor(.white)
+                }
             }
         }
     }
