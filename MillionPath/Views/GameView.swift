@@ -34,18 +34,26 @@ struct GameView: View {
                 
                 // Подсказки
                 HStack(spacing: 24) {
-                    HelpButton(
-                        icon: Image("50_50"),
-                        isUsed: viewModel.game.usedHints.contains(.fiftyFifty)
-                    )
-                    HelpButton(
-                        icon: Image("audience"),
-                        isUsed: viewModel.game.usedHints.contains(.audience)
-                    )
-                    HelpButton(
-                        icon: Image("call"),
-                        isUsed: viewModel.game.usedHints.contains(.friendsHelp)
-                    )
+                    HelpButtonView(icon: Image("50_50"), isUsed: viewModel.game.usedHints.contains(.fiftyFifty))
+                        .onTapGesture {
+                            if !viewModel.game.usedHints.contains(.fiftyFifty) {
+                                viewModel.get50_50Help()
+                            }
+                        }
+                        .disabled(viewModel.game.usedHints.contains(.fiftyFifty))
+                    
+                    HelpButtonView(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
+                        .onTapGesture {
+                                viewModel.useAudienceHintIfNeeded()
+                            }
+                            .disabled(viewModel.game.usedHints.contains(.audience))
+
+                    
+                    HelpButtonView(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
+                        .onTapGesture {
+                                viewModel.useFriendHintIfNeeded()
+                            }
+                            .disabled(viewModel.game.usedHints.contains(.friendsHelp))
                 }
             }
             .padding()
@@ -54,9 +62,14 @@ struct GameView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(BackgroundView())
         .navigationBarBackButtonHidden()
+        
+        .onAppear{
+            viewModel.newGame()
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
+                    viewModel.stopGame()
                     coordinator.pop()
                 } label: {
                     Image(systemName: "arrow.left")
@@ -80,8 +93,14 @@ struct GameView: View {
                     .foregroundColor(.white)
             }
         }
-        .onAppear {
-            viewModel.newGame()
+        .sheet(isPresented: $viewModel.showAudienceHelp) {
+            AudienceHelpView(answer: viewModel.audienceAnswer)
+            .presentationDetents([.medium])
+        }
+
+        .sheet(isPresented: $viewModel.showFriendHelp) {
+            FriendHelpView(answer: viewModel.friendAnswer)
+            .presentationDetents([.medium])
         }
     }
 }
@@ -100,20 +119,26 @@ struct AnswerButtonView: View {
     var body: some View {
         let letter = ["A", "B", "C", "D"][index]
         
-        Text("\(letter): \(answer.answer)")
-            .font(.system(size: 20, weight: .semibold))
-            .foregroundColor(.white)
-            .padding(.vertical)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 32)
-            .background(gradient(for: answer.state))
-            .clipShape(CustomButtonShape())
-            .overlay(
-                CustomButtonShape()
-                    .stroke(Color.white, lineWidth: 4)
-            )
-            .padding(.horizontal)
-        //            .opacity(answer.state == .hidden ? 1 : 1.0)
+        HStack(alignment: .center, spacing: 0) {
+            Text("\(letter): ")
+                .foregroundColor(.orange)
+            
+            Text(answer.answer)
+                .foregroundColor(.white)
+            
+            Spacer()
+        }
+        .font(.system(size: 20, weight: .semibold))
+        .padding(.vertical)
+        .padding(.leading, 32)
+        .frame(maxWidth: .infinity)
+        .background(gradient(for: answer.state))
+        .clipShape(CustomButtonShape())
+        .overlay(
+            CustomButtonShape()
+                .stroke(Color.white, lineWidth: 4)
+        )
+        .padding(.horizontal)
     }
     
     private func gradient(for state: CurrentQuestion.Answer.QuestionState) -> LinearGradient {
@@ -134,9 +159,7 @@ struct AnswerButtonView: View {
     }
 }
 
-
-// ToDo добавить логику нажатия
-struct HelpButton: View {
+struct HelpButtonView: View {
     var icon: Image
     var isUsed: Bool
     
@@ -144,5 +167,69 @@ struct HelpButton: View {
         icon
             .padding()
             .frame(width: 84, height: 64)
+            .opacity(isUsed ? 0.5 : 1.0)
+    }
+}
+
+
+struct AudienceHelpView: View {
+    let answer: String
+
+    var body: some View {
+        ZStack {
+            BackgroundView()
+                .ignoresSafeArea()
+            VStack(spacing: 20) {
+                Text("Помощь зала")
+                    .foregroundStyle(.white)
+                    .font(.title)
+                    .bold()
+                    .padding(.top)
+                
+                Text("Зал считает, что правильный ответ:")
+                    .foregroundStyle(.white)
+                    .font(.body)
+                
+                Text(answer)
+                    .font(.title)
+                    .foregroundColor(.orange)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                Spacer()
+            }
+            .padding()
+        }
+    }
+}
+
+
+struct FriendHelpView: View {
+    let answer: String
+
+    var body: some View {
+        ZStack {
+            BackgroundView()
+                .ignoresSafeArea()
+            VStack(spacing: 20) {
+                Text("Звонок другу")
+                    .foregroundStyle(.white)
+                    .font(.title)
+                    .bold()
+                    .padding(.top)
+                
+                Text("Друг считает, что правильный ответ:")
+                    .foregroundStyle(.white)
+                    .font(.body)
+                
+                Text(answer)
+                    .font(.title)
+                    .foregroundColor(.orange)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                
+                Spacer()
+            }
+            .padding()
+        }
     }
 }
