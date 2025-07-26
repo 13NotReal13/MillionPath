@@ -40,14 +40,14 @@ struct GameView: View {
                                 viewModel.get50_50Help()
                             }
                         }
-                        .disabled(viewModel.game.usedHints.contains(.fiftyFifty))
+                        .disabled(viewModel.game.usedHints.contains(.fiftyFifty) || !viewModel.userInteractionEnable)
                     
                     HelpButtonView(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
                         .onTapGesture {
                             viewModel.useAudienceHintIfNeeded()
                             coordinator.present(sheet: .audienceHelp(viewModel.audienceAnswer))
                         }
-                        .disabled(viewModel.game.usedHints.contains(.audience))
+                        .disabled(viewModel.game.usedHints.contains(.audience) || !viewModel.userInteractionEnable)
                     
                     
                     HelpButtonView(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
@@ -55,7 +55,7 @@ struct GameView: View {
                             viewModel.useFriendHintIfNeeded()
                             coordinator.present(sheet: .friendHelp(viewModel.friendAnswer))
                         }
-                        .disabled(viewModel.game.usedHints.contains(.friendsHelp))
+                        .disabled(viewModel.game.usedHints.contains(.friendsHelp) || !viewModel.userInteractionEnable)
                 }
             }
             .padding()
