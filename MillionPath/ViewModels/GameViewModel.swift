@@ -143,6 +143,11 @@ extension GameViewModel {
         startTimer()
     }
     
+    func pauseGame() {
+        stopTimer()
+        AudioManager.shared.pause()
+    }
+    
     func stopGame() {
         Task {
             await loadQuestions()
@@ -165,7 +170,7 @@ extension GameViewModel {
     }
     
     func continueGame() {
-        userInteractionEnable = true
+        AudioManager.shared.resume()
         startTimer()
     }
     
@@ -309,16 +314,7 @@ extension GameViewModel {
             }
             self.game = Game(questions: currentQuestions)
             self.state = .ready
-            //
-            //            self.startTimer()
-            //            self.soundService.playSound(.start)
-            
-            //            newGame()
-            
-            
-            
-        }
-        catch let error as NetworkError {
+        } catch let error as NetworkError {
             var message: String
             switch error {
             case .invalidURL:
@@ -332,8 +328,7 @@ extension GameViewModel {
             }
             
             self.state = .error(message: message)
-        }
-        catch {
+        } catch {
             self.state = .error(message: error.localizedDescription)
         }
     }

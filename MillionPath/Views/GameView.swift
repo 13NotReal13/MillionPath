@@ -70,7 +70,7 @@ struct GameView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
-                    viewModel.stopGame()
+                    viewModel.pauseGame()
                     coordinator.present(fullScreenCover: .menuGame)
                 } label: {
                     Image(systemName: "arrow.left")
@@ -91,7 +91,7 @@ struct GameView: View {
             
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
-                    viewModel.stopGame()
+                    viewModel.pauseGame()
                     coordinator.present(fullScreenCover: .progressGame)
                 } label: {
                     Image("barChart")

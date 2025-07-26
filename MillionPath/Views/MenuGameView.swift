@@ -26,6 +26,7 @@ struct MenuGameView: View {
                 title: "Go Home",
                 isOrange: false,
                 action: {
+                    viewModel.stopGame()
                     coordinator.dismissFullScreenCover()
                     coordinator.pop()
                 }

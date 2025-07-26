@@ -23,6 +23,7 @@ final class AudioManager: AudioManagerProtocol {
     static let shared = AudioManager()
     
     private var player: AVAudioPlayer?
+    private var isPaused = false
     
     private init() {}
     
@@ -43,5 +44,17 @@ final class AudioManager: AudioManagerProtocol {
     
     func stop() {
         player?.stop()
+    }
+    
+    func pause() {
+        player?.pause()
+        isPaused = true
+    }
+
+    func resume() {
+        if isPaused {
+            player?.play()
+            isPaused = false
+        }
     }
 }
