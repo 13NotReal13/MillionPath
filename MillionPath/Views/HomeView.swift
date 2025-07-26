@@ -14,11 +14,6 @@ struct HomeView: View {
     
     var body: some View {
         ZStack {
-            LinearGradient(colors: [.gradientBlue, .gradientBlack], startPoint: .top, endPoint: .bottom)
-                .ignoresSafeArea()
-            
-            Spacer()
-            
             VStack(spacing: 16) {
                 Spacer()
                 Image("Logo")
@@ -52,6 +47,9 @@ struct HomeView: View {
             }
             .padding(32)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(BackgroundView())
+        .ignoresSafeArea()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
