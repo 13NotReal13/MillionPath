@@ -44,9 +44,10 @@ struct GameView: View {
                     
                     HelpButtonView(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
                         .onTapGesture {
-                                viewModel.useAudienceHintIfNeeded()
-                            }
-                            .disabled(viewModel.game.usedHints.contains(.audience))
+                            viewModel.useAudienceHintIfNeeded()
+                            coordinator.present(sheet: .audienceHelp(viewModel.audienceAnswer))
+                        }
+                        .disabled(viewModel.game.usedHints.contains(.audience))
 
                     
                     HelpButtonView(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
@@ -93,11 +94,6 @@ struct GameView: View {
                     .foregroundColor(.white)
             }
         }
-        .sheet(isPresented: $viewModel.showAudienceHelp) {
-            AudienceHelpView(answer: viewModel.audienceAnswer)
-            .presentationDetents([.medium])
-        }
-
         .sheet(isPresented: $viewModel.showFriendHelp) {
             FriendHelpView(answer: viewModel.friendAnswer)
             .presentationDetents([.medium])
@@ -106,9 +102,11 @@ struct GameView: View {
 }
 
 #Preview {
-    GameView()
-        .environmentObject(NavigationCoordinator.shared)
-        .environmentObject(GameViewModel())
+    NavigationStack {
+        GameView()
+            .environmentObject(NavigationCoordinator.shared)
+            .environmentObject(GameViewModel())
+    }
 }
 
 

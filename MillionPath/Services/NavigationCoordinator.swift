@@ -17,11 +17,17 @@ enum Page: String, Identifiable {
     }
 }
 
-enum Sheet: String, Identifiable {
+enum Sheet: Identifiable {
     case rules
+    case audienceHelp(String)
     
     var id: String {
-        return self.rawValue
+        switch self {
+        case .rules:
+            return "rules"
+        case .audienceHelp(let answer):
+            return "audienceHelp_\(answer)"
+        }
     }
 }
 
@@ -67,6 +73,9 @@ final class NavigationCoordinator: ObservableObject {
         switch sheet {
         case .rules:
             RulesView()
+        case .audienceHelp(let answer):
+            AudienceHelpView(answer: answer)
+                .presentationDetents([.medium])
         }
     }
 }
