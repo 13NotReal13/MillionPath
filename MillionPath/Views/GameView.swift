@@ -67,6 +67,11 @@ struct GameView: View {
         .onAppear{
             viewModel.newGame()
         }
+        .onChange(of: viewModel.state) { newState in
+            if case .gameOver(let score) = newState {
+                coordinator.push(.gameOver)
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
@@ -80,7 +85,7 @@ struct GameView: View {
             
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 4) {
-                    Text("QUESTION #")
+                    Text("QUESTION # \(viewModel.game.currentQuestionIndex + 1)/\(viewModel.game.questions.count)")
                         .foregroundColor(.white)
                         .font(.caption)
                     Text("$\(viewModel.game.currentQuestion?.cost ?? 0)")

@@ -11,6 +11,7 @@ import SwiftUI
 enum Page: String, Identifiable {
     case home
     case game
+    case gameOver
     
     var id: String {
         return self.rawValue
@@ -88,6 +89,8 @@ final class NavigationCoordinator: ObservableObject {
             HomeView()
         case .game:
             GameView()
+        case .gameOver:
+            GameOverView()
         }
     }
     

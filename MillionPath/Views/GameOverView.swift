@@ -1,5 +1,5 @@
 //
-//  GaveOverView.swift
+//  GameOverView.swift
 //  MillionPath
 //
 //  Created by Sergei Biryukov on 23.07.2025.
@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-struct GaveOverView: View {
+struct GameOverView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
+    @EnvironmentObject private var viewModel: GameViewModel
     
     @State var round: Int = 1
     @State var totalAmount: Double = 0
@@ -28,7 +29,7 @@ struct GaveOverView: View {
                     .foregroundColor(.white)
                     .padding(.top, 16)
                 
-                Text("Level \(round)")
+                Text("Level \(viewModel.game.currentQuestionIndex + 1)/\(viewModel.game.questions.count)")
                     .font(.system(size: 16, weight: .regular))
                     .multilineTextAlignment(.center)
                     .foregroundColor(.white)
@@ -37,7 +38,7 @@ struct GaveOverView: View {
                 
                 HStack(spacing: 8) {
                     Image("Coin")
-                    Text("$\(totalAmount.formatted())")
+                    Text("$\(viewModel.getFinalScore())")
                         .font(.system(size: 24, weight: .semibold))
                         .multilineTextAlignment(.center)
                         .foregroundColor(.white)
@@ -47,18 +48,20 @@ struct GaveOverView: View {
                 Spacer()
                 
                 VStack(spacing: 0) {
-                    
-                    Button(action: {
-                        
-                    }) {
+                    Button {
+                        viewModel.stopGame()
+                        coordinator.popToRoot()
+                        coordinator.push(.game)
+                    } label: {
                         Text("New Game")
                             .modifier(ButtonView(backgroundColors: LinearGradient(gradient: Gradient(colors: [Color.yellow, Color.orange]),startPoint: .leading, endPoint: .trailing)))
                     }
                     .padding(.bottom, 16)
                     
-                    Button(action: {
-
-                    }) {
+                    Button {
+                        viewModel.stopGame()
+                        coordinator.popToRoot()
+                    } label: {
                         Text("Main Screen")
                             .modifier(ButtonView(backgroundColors: LinearGradient(gradient: Gradient(colors: [Color.gradientBlue, Color.gradientBlack]),startPoint: .top, endPoint: .bottom)))
                     }
@@ -66,9 +69,12 @@ struct GaveOverView: View {
                 .padding(.bottom, 32)
             }
         }
+        .navigationBarBackButtonHidden()
     }
 }
 
 #Preview {
-    GaveOverView()
+    GameOverView()
+        .environmentObject(NavigationCoordinator.shared)
+        .environmentObject(GameViewModel())
 }

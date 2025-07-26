@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-enum GameState {
+enum GameState: Equatable {
     case loading
     case ready
     case error(message: String)
