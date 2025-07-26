@@ -68,7 +68,7 @@ struct GameView: View {
             viewModel.newGame()
         }
         .onChange(of: viewModel.state) { newState in
-            if case .gameOver(let score) = newState {
+            if case .gameOver(_) = newState {
                 coordinator.push(.gameOver)
             }
         }
