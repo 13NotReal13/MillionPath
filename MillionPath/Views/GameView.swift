@@ -41,18 +41,29 @@ struct GameView: View {
                 HStack(spacing: 24) {
                     HelpButton(icon: Image("50_50"), isUsed: viewModel.game.usedHints.contains(.fiftyFifty))
                         .onTapGesture {
-                            viewModel.get50_50Help()
+                            if !viewModel.game.usedHints.contains(.fiftyFifty) {
+                                viewModel.get50_50Help()
+                            }
                         }
+                        .disabled(viewModel.game.usedHints.contains(.fiftyFifty))
+                    
                     HelpButton(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
                         .onTapGesture {
-                            audienceAnswer = viewModel.getExpertHelp()
-                            showAudienceHelp = true
+                            if let result = viewModel.useAudienceHintIfNeeded() {
+                                audienceAnswer = result
+                                showAudienceHelp = true
+                            }
                         }
+                        .disabled(viewModel.game.usedHints.contains(.audience))
+                    
                     HelpButton(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
                         .onTapGesture {
-                            friendAnswer = viewModel.getFriendsHelp()
-                            showFriendHelp = true
+                            if let result = viewModel.useFriendHintIfNeeded() {
+                                friendAnswer = result
+                                showFriendHelp = true
+                            }
                         }
+                        .disabled(viewModel.game.usedHints.contains(.friendsHelp))
                 }
             }
             .padding()
@@ -100,7 +111,6 @@ struct GameView: View {
                 Text("Друг считает, что правильный ответ: \(friendAnswer)")
             }
             .presentationDetents([.medium])
-            
         }
     }
 }
@@ -132,7 +142,6 @@ struct AnswerButtonView: View {
                     .stroke(Color.white, lineWidth: 4)
             )
             .padding(.horizontal)
-        //            .opacity(answer.state == .hidden ? 1 : 1.0)
     }
     
     private func gradient(for state: CurrentQuestion.Answer.QuestionState) -> LinearGradient {
@@ -153,8 +162,6 @@ struct AnswerButtonView: View {
     }
 }
 
-
-// ToDo добавить логику нажатия
 struct HelpButton: View {
     var icon: Image
     var isUsed: Bool

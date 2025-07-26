@@ -204,6 +204,24 @@ extension GameViewModel {
         return answerText
     }
     
+
+    /// Проверка: была ли подсказка использована
+        func useFiftyFiftyHintIfNeeded() {
+            guard !game.usedHints.contains(.fiftyFifty) else { return }
+            get50_50Help()
+        }
+        
+        func useAudienceHintIfNeeded() -> String? {
+            guard !game.usedHints.contains(.audience) else { return nil }
+            return getExpertHelp()
+        }
+
+        func useFriendHintIfNeeded() -> String? {
+            guard !game.usedHints.contains(.friendsHelp) else { return nil }
+            return getFriendsHelp()
+        }
+    
+    
     /// Забрать выйгрыш
     func takeMoneyNow() {
         gameOver(with: Constants.costs[game.currentQuestionIndex])
@@ -256,8 +274,13 @@ extension GameViewModel {
             self.game = Game(questions: currentQuestions)
             self.state = .ready
             //
-            self.startTimer()
-            self.soundService.playSound(.start)
+//            self.startTimer()
+//            self.soundService.playSound(.start)
+            
+//            newGame()
+
+            
+            
         }
         catch let error as NetworkError {
             var message: String
