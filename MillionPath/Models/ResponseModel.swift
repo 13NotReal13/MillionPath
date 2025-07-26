@@ -48,3 +48,15 @@ enum Difficulty: String, Codable, CaseIterable {
     }
 }
 
+extension Question {
+    var decoded: Question {
+        return Question(
+            category: category.removingPercentEncoding ?? category,
+            question: question.removingPercentEncoding ?? question,
+            correctAnswer: correctAnswer.removingPercentEncoding ?? correctAnswer,
+            incorrectAnswers: incorrectAnswers.map { $0.removingPercentEncoding ?? $0 },
+            difficulty: difficulty,
+            type: type.removingPercentEncoding ?? type
+        )
+    }
+}
