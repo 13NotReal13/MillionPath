@@ -11,11 +11,6 @@ struct GameView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
     @EnvironmentObject private var viewModel: GameViewModel
     
-    @State private var showAudienceHelp = false
-    @State private var audienceAnswer: String = ""
-    @State private var showFriendHelp = false
-    @State private var friendAnswer: String = ""
-    
     var body: some View {
         ZStack {
             VStack {
@@ -49,21 +44,16 @@ struct GameView: View {
                     
                     HelpButtonView(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
                         .onTapGesture {
-                            if let result = viewModel.useAudienceHintIfNeeded() {
-                                audienceAnswer = result
-                                showAudienceHelp = true
+                                viewModel.useAudienceHintIfNeeded()
                             }
-                        }
-                        .disabled(viewModel.game.usedHints.contains(.audience))
+                            .disabled(viewModel.game.usedHints.contains(.audience))
+
                     
                     HelpButtonView(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
                         .onTapGesture {
-                            if let result = viewModel.useFriendHintIfNeeded() {
-                                friendAnswer = result
-                                showFriendHelp = true
+                                viewModel.useFriendHintIfNeeded()
                             }
-                        }
-                        .disabled(viewModel.game.usedHints.contains(.friendsHelp))
+                            .disabled(viewModel.game.usedHints.contains(.friendsHelp))
                 }
             }
             .padding()
@@ -103,18 +93,13 @@ struct GameView: View {
                     .foregroundColor(.white)
             }
         }
-        .sheet(isPresented: $showAudienceHelp) {
-            VStack {
-                Text("Помощь зала").font(.title).padding()
-                Text("Зал считает, что правильный ответ: \(audienceAnswer)")
-            }
+        .sheet(isPresented: $viewModel.showAudienceHelp) {
+            AudienceHelpView(answer: viewModel.audienceAnswer)
             .presentationDetents([.medium])
         }
-        .sheet(isPresented: $showFriendHelp) {
-            VStack {
-                Text("Звонок другу").font(.title).padding()
-                Text("Друг считает, что правильный ответ: \(friendAnswer)")
-            }
+
+        .sheet(isPresented: $viewModel.showFriendHelp) {
+            FriendHelpView(answer: viewModel.friendAnswer)
             .presentationDetents([.medium])
         }
     }
@@ -187,13 +172,64 @@ struct HelpButtonView: View {
 }
 
 
-//struct friendAnswer: View {
-//    var body: some View {
-//        ZStack {
-//            VStack {
-//                Text("Звонок другу").font(.title).padding()
-//                Text("Друг считает, что правильный ответ: \(friendAnswer)")
-//            }
-//        }
-//    }
-//}
+struct AudienceHelpView: View {
+    let answer: String
+
+    var body: some View {
+        ZStack {
+            BackgroundView()
+                .ignoresSafeArea()
+            VStack(spacing: 20) {
+                Text("Помощь зала")
+                    .foregroundStyle(.white)
+                    .font(.title)
+                    .bold()
+                    .padding(.top)
+                
+                Text("Зал считает, что правильный ответ:")
+                    .foregroundStyle(.white)
+                    .font(.body)
+                
+                Text(answer)
+                    .font(.title)
+                    .foregroundColor(.orange)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                Spacer()
+            }
+            .padding()
+        }
+    }
+}
+
+
+struct FriendHelpView: View {
+    let answer: String
+
+    var body: some View {
+        ZStack {
+            BackgroundView()
+                .ignoresSafeArea()
+            VStack(spacing: 20) {
+                Text("Звонок другу")
+                    .foregroundStyle(.white)
+                    .font(.title)
+                    .bold()
+                    .padding(.top)
+                
+                Text("Друг считает, что правильный ответ:")
+                    .foregroundStyle(.white)
+                    .font(.body)
+                
+                Text(answer)
+                    .font(.title)
+                    .foregroundColor(.orange)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                
+                Spacer()
+            }
+            .padding()
+        }
+    }
+}

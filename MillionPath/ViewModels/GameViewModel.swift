@@ -27,6 +27,11 @@ class GameViewModel: ObservableObject {
     @Published var state: GameState = .loading
     @Published var userInteractionEnable: Bool = true
     
+    @Published var showAudienceHelp = false
+    @Published var audienceAnswer: String = ""
+    @Published var showFriendHelp = false
+    @Published var friendAnswer: String = ""
+    
     var timerColor: Color {
         switch self.game.timeRemaining {
         case ...10:
@@ -227,20 +232,22 @@ extension GameViewModel {
     
 
     /// Проверка: была ли подсказка использована
-        func useFiftyFiftyHintIfNeeded() {
-            guard !game.usedHints.contains(.fiftyFifty) else { return }
-            get50_50Help()
-        }
-        
-        func useAudienceHintIfNeeded() -> String? {
-            guard !game.usedHints.contains(.audience) else { return nil }
-            return getExpertHelp()
-        }
+    func useFiftyFiftyHintIfNeeded() {
+         guard !game.usedHints.contains(.fiftyFifty) else { return }
+         get50_50Help()
+     }
 
-        func useFriendHintIfNeeded() -> String? {
-            guard !game.usedHints.contains(.friendsHelp) else { return nil }
-            return getFriendsHelp()
-        }
+     func useAudienceHintIfNeeded() {
+         guard !game.usedHints.contains(.audience) else { return }
+         audienceAnswer = getExpertHelp()
+         showAudienceHelp = true
+     }
+
+     func useFriendHintIfNeeded() {
+         guard !game.usedHints.contains(.friendsHelp) else { return }
+         friendAnswer = getFriendsHelp()
+         showFriendHelp = true
+     }
     
     
     /// Забрать выйгрыш
