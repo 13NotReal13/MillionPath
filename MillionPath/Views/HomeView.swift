@@ -27,23 +27,11 @@ struct HomeView: View {
                 
                 Spacer()
                 
-                Button(action: {
-                    coordinator.push(.game)
-                }) {
-                    Text("New Game")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 311, height: 62)
-                        .background(
-                            LinearGradient(gradient: Gradient(colors: [Color.yellow, Color.orange]),
-                                           startPoint: .leading, endPoint: .trailing)
-                        )
-                        .clipShape(CustomButtonShape())
-                        .overlay(
-                            CustomButtonShape()
-                                .stroke(Color.white, lineWidth: 4)
-                        )
-                }
+                MainMenuButton(
+                    title: "New Game",
+                    isOrange: false,
+                    action: { coordinator.push(.game) }
+                )
             }
             .padding(32)
         }

@@ -40,20 +40,22 @@ struct GameView: View {
                                 viewModel.get50_50Help()
                             }
                         }
-                        .disabled(viewModel.game.usedHints.contains(.fiftyFifty))
+                        .disabled(viewModel.game.usedHints.contains(.fiftyFifty) || !viewModel.userInteractionEnable)
                     
                     HelpButtonView(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
                         .onTapGesture {
-                                viewModel.useAudienceHintIfNeeded()
-                            }
-                            .disabled(viewModel.game.usedHints.contains(.audience))
-
+                            viewModel.useAudienceHintIfNeeded()
+                            coordinator.present(sheet: .audienceHelp(viewModel.audienceAnswer))
+                        }
+                        .disabled(viewModel.game.usedHints.contains(.audience) || !viewModel.userInteractionEnable)
+                    
                     
                     HelpButtonView(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
                         .onTapGesture {
-                                viewModel.useFriendHintIfNeeded()
-                            }
-                            .disabled(viewModel.game.usedHints.contains(.friendsHelp))
+                            viewModel.useFriendHintIfNeeded()
+                            coordinator.present(sheet: .friendHelp(viewModel.friendAnswer))
+                        }
+                        .disabled(viewModel.game.usedHints.contains(.friendsHelp) || !viewModel.userInteractionEnable)
                 }
             }
             .padding()
@@ -62,15 +64,19 @@ struct GameView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(BackgroundView())
         .navigationBarBackButtonHidden()
-        
         .onAppear{
             viewModel.newGame()
+        }
+        .onChange(of: viewModel.state) { newState in
+            if case .gameOver(_) = newState {
+                coordinator.push(.gameOver)
+            }
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
-                    viewModel.stopGame()
-                    coordinator.pop()
+                    viewModel.pauseGame()
+                    coordinator.present(fullScreenCover: .menuGame)
                 } label: {
                     Image(systemName: "arrow.left")
                         .foregroundColor(.white)
@@ -79,7 +85,7 @@ struct GameView: View {
             
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 4) {
-                    Text("QUESTION #")
+                    Text("QUESTION # \(viewModel.game.currentQuestionIndex + 1)/\(viewModel.game.questions.count)")
                         .foregroundColor(.white)
                         .font(.caption)
                     Text("$\(viewModel.game.currentQuestion?.cost ?? 0)")
@@ -89,26 +95,24 @@ struct GameView: View {
             }
             
             ToolbarItem(placement: .navigationBarTrailing) {
-                Image("barChart")
-                    .foregroundColor(.white)
+                Button {
+                    viewModel.pauseGame()
+                    coordinator.present(fullScreenCover: .progressGame)
+                } label: {
+                    Image("barChart")
+                        .foregroundColor(.white)
+                }
             }
-        }
-        .sheet(isPresented: $viewModel.showAudienceHelp) {
-            AudienceHelpView(answer: viewModel.audienceAnswer)
-            .presentationDetents([.medium])
-        }
-
-        .sheet(isPresented: $viewModel.showFriendHelp) {
-            FriendHelpView(answer: viewModel.friendAnswer)
-            .presentationDetents([.medium])
         }
     }
 }
 
 #Preview {
-    GameView()
-        .environmentObject(NavigationCoordinator.shared)
-        .environmentObject(GameViewModel())
+    NavigationStack {
+        GameView()
+            .environmentObject(NavigationCoordinator.shared)
+            .environmentObject(GameViewModel())
+    }
 }
 
 
@@ -174,7 +178,7 @@ struct HelpButtonView: View {
 
 struct AudienceHelpView: View {
     let answer: String
-
+    
     var body: some View {
         ZStack {
             BackgroundView()
@@ -205,7 +209,7 @@ struct AudienceHelpView: View {
 
 struct FriendHelpView: View {
     let answer: String
-
+    
     var body: some View {
         ZStack {
             BackgroundView()

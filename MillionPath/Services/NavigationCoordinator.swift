@@ -11,23 +11,43 @@ import SwiftUI
 enum Page: String, Identifiable {
     case home
     case game
+    case gameOver
     
     var id: String {
         return self.rawValue
     }
 }
 
-enum Sheet: String, Identifiable {
+enum Sheet: Identifiable {
     case rules
+    case audienceHelp(String)
+    case friendHelp(String)
     
     var id: String {
-        return self.rawValue
+        switch self {
+        case .rules:
+            return "rules"
+        case .audienceHelp(let answer):
+            return "audienceHelp_\(answer)"
+        case .friendHelp(let answer):
+            return "friendHelp_\(answer)"
+        }
+    }
+}
+
+enum FullScreenCover: String, Identifiable {
+    case menuGame
+    case progressGame
+    
+    var id: String {
+        self.rawValue
     }
 }
 
 final class NavigationCoordinator: ObservableObject {
     @Published var path = NavigationPath()
     @Published var sheet: Sheet?
+    @Published var fullScreenCover: FullScreenCover?
     
     static let shared = NavigationCoordinator()
     private init() {}
@@ -41,6 +61,8 @@ final class NavigationCoordinator: ObservableObject {
     }
     
     func popToRoot() {
+        dismissSheet()
+        dismissFullScreenCover()
         path.removeLast(path.count)
     }
     
@@ -52,6 +74,14 @@ final class NavigationCoordinator: ObservableObject {
         sheet = nil
     }
     
+    func present(fullScreenCover: FullScreenCover) {
+        self.fullScreenCover = fullScreenCover
+    }
+    
+    func dismissFullScreenCover() {
+        fullScreenCover = nil
+    }
+    
     @ViewBuilder
     func build(page: Page) -> some View {
         switch page {
@@ -59,6 +89,8 @@ final class NavigationCoordinator: ObservableObject {
             HomeView()
         case .game:
             GameView()
+        case .gameOver:
+            GameOverView()
         }
     }
     
@@ -67,6 +99,22 @@ final class NavigationCoordinator: ObservableObject {
         switch sheet {
         case .rules:
             RulesView()
+        case .audienceHelp(let answer):
+            AudienceHelpView(answer: answer)
+                .presentationDetents([.medium])
+        case .friendHelp(let answer):
+            FriendHelpView(answer: answer)
+                .presentationDetents([.medium])
+        }
+    }
+    
+    @ViewBuilder
+    func build(fullScreenCover: FullScreenCover) -> some View {
+        switch fullScreenCover {
+        case .menuGame:
+            MenuGameView()
+        case .progressGame:
+            EmptyView()
         }
     }
 }
