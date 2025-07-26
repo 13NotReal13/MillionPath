@@ -45,9 +45,11 @@ struct GameView: View {
                     HelpButtonView(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
                         .onTapGesture {
                             viewModel.useAudienceHintIfNeeded()
-                            coordinator.present(sheet: .audienceHelp(viewModel.audienceAnswer))
                         }
                         .disabled(viewModel.game.usedHints.contains(.audience) || !viewModel.userInteractionEnable)
+//                            coordinator.present(sheet: .audienceHelp(viewModel.audienceAnswer))
+                        
+                       
                     
                     
                     HelpButtonView(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
@@ -111,6 +113,11 @@ struct GameView: View {
                         .foregroundColor(.white)
                 }
             }
+        }
+        // поменять!!!
+        .sheet(isPresented: $viewModel.showAudienceHelp) {
+            AudienceHelpView(votes: viewModel.audienceVotes)
+                .presentationDetents([.medium])
         }
     }
 }
@@ -185,28 +192,41 @@ struct HelpButtonView: View {
 
 
 struct AudienceHelpView: View {
-    let answer: String
+    let votes: [AudienceVote]
     
     var body: some View {
         ZStack {
             BackgroundView()
                 .ignoresSafeArea()
+            
             VStack(spacing: 20) {
                 Text("Помощь зала")
-                    .foregroundStyle(.white)
                     .font(.title)
+                    .foregroundColor(.white)
                     .bold()
                     .padding(.top)
                 
-                Text("Зал считает, что правильный ответ:")
-                    .foregroundStyle(.white)
-                    .font(.body)
+                HStack(alignment: .bottom, spacing: 16) {
+                    ForEach(votes) { vote in
+                        VStack {
+                            Text("\(vote.percentage)%")
+                                .foregroundColor(.white)
+                                .font(.caption)
+                            
+                            Rectangle()
+                                .fill(Color.orange)
+                                .frame(width: 24, height: CGFloat(vote.percentage * 2)) // умножаем для видимости
+                                .cornerRadius(4)
+                            
+                            Text(vote.letter)
+                                .foregroundColor(.white)
+                                .font(.caption)
+                        }
+                    }
+                }
+                .frame(height: 200)
+                .padding()
                 
-                Text(answer)
-                    .font(.title)
-                    .foregroundColor(.orange)
-                    .multilineTextAlignment(.center)
-                    .padding()
                 Spacer()
             }
             .padding()

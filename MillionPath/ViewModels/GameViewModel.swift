@@ -32,6 +32,8 @@ class GameViewModel: ObservableObject {
     @Published var showFriendHelp = false
     @Published var friendAnswer: String = ""
     
+    @Published var audienceVotes: [AudienceVote] = []
+    
     var timerColor: Color {
         switch self.game.timeRemaining {
         case ...10:
@@ -220,26 +222,31 @@ extension GameViewModel {
     }
     
     /// Помощь зала
-    func getExpertHelp() -> String {
+    func getExpertHelpVotes() -> [AudienceVote] {
         var newGame = game
-        guard newGame.currentQuestionIndex < newGame.questions.count else { return "" }
+        guard newGame.currentQuestionIndex < newGame.questions.count else { return [] }
         let question = newGame.questions[newGame.currentQuestionIndex]
+        let answers = question.answers
+        let correctIndex = answers.firstIndex(where: { $0.isCorrect }) ?? 0
         
-        let probability = 0.7
-        let isCorrect = Double.random(in: 0...1) < probability
+        let difficulty = question.difficulty
+        let correctProb: Double = difficulty == .hard ? 0.5 : 0.7
         
-        let answerText: String
-        
-        if isCorrect {
-            answerText = question.answers.first(where: { $0.isCorrect })?.answer ?? ""
-        } else {
-            let incorrects = question.answers.filter { !$0.isCorrect && $0.state != .hidden }
-            answerText = incorrects.randomElement()?.answer ?? ""
+        // Расчёт вероятностей
+        var result: [Double] = Array(repeating: (1.0 - correctProb) / Double(answers.count - 1), count: answers.count)
+        result[correctIndex] = correctProb
+
+        // Переводим в проценты (Int)
+        let votes: [AudienceVote] = result.enumerated().map { index, prob in
+            let letter = ["A", "B", "C", "D"][index]
+            let percent = Int(prob * 100)
+            return AudienceVote(letter: letter, answer: answers[index].answer, percentage: percent)
         }
-        
+
         newGame.usedHints.insert(.audience)
         game = newGame
-        return answerText
+
+        return votes
     }
     
     
@@ -251,7 +258,7 @@ extension GameViewModel {
     
     func useAudienceHintIfNeeded() {
         guard !game.usedHints.contains(.audience) else { return }
-        audienceAnswer = getExpertHelp()
+        audienceVotes = getExpertHelpVotes()
         showAudienceHelp = true
     }
     

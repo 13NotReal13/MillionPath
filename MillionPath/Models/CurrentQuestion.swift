@@ -29,11 +29,13 @@ struct CurrentQuestion: Identifiable {
     let cost: Int
     let isHard: Bool
     var answers: [Answer]
+    let difficulty: Difficulty
     
     init(model: Question, cost: Int) {
         self.cost = cost
         self.question = model.question
         self.isHard = model.difficulty == .hard
+        self.difficulty = model.difficulty
         
         var allAnswers = [Answer(answer: model.correctAnswer, isCorrect: true, state: .normal)]
         allAnswers += model.incorrectAnswers.map { Answer(answer: $0, isCorrect: false, state: .normal) }
