@@ -45,13 +45,10 @@ struct GameView: View {
                     HelpButtonView(icon: Image("audience"), isUsed: viewModel.game.usedHints.contains(.audience))
                         .onTapGesture {
                             viewModel.useAudienceHintIfNeeded()
+                            coordinator.present(sheet: .audienceHelp(votes: viewModel.audienceVotes))
                         }
                         .disabled(viewModel.game.usedHints.contains(.audience) || !viewModel.userInteractionEnable)
-//                            coordinator.present(sheet: .audienceHelp(viewModel.audienceAnswer))
                         
-                       
-                    
-                    
                     HelpButtonView(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
                         .onTapGesture {
                             viewModel.useFriendHintIfNeeded()
@@ -113,11 +110,6 @@ struct GameView: View {
                         .foregroundColor(.white)
                 }
             }
-        }
-        // поменять!!!
-        .sheet(isPresented: $viewModel.showAudienceHelp) {
-            AudienceHelpView(votes: viewModel.audienceVotes)
-                .presentationDetents([.medium])
         }
     }
 }

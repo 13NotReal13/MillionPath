@@ -20,15 +20,15 @@ enum Page: String, Identifiable {
 
 enum Sheet: Identifiable {
     case rules
-//    case audienceHelp(String)
+    case audienceHelp(votes: [AudienceVote])
     case friendHelp(String)
     
     var id: String {
         switch self {
         case .rules:
             return "rules"
-//        case .audienceHelp(let answer):
-//            return "audienceHelp_\(answer)"
+        case .audienceHelp:
+            return "audienceHelp_"
         case .friendHelp(let answer):
             return "friendHelp_\(answer)"
         }
@@ -109,9 +109,9 @@ final class NavigationCoordinator: ObservableObject {
         switch sheet {
         case .rules:
             RulesView()
-//        case .audienceHelp(let answer):
-//            AudienceHelpView(answer: answer)
-//                .presentationDetents([.medium])
+        case .audienceHelp(let votes):
+            AudienceHelpView(votes: votes)
+                .presentationDetents([.medium])
         case .friendHelp(let answer):
             FriendHelpView(answer: answer)
                 .presentationDetents([.medium])

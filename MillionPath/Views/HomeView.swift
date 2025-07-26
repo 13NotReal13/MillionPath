@@ -11,6 +11,7 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
+    @AppStorage("maxScore") private var maxScore: Int = 0
     
     var body: some View {
         ZStack {
@@ -19,6 +20,19 @@ struct HomeView: View {
                 Image("Logo")
                     .resizable()
                     .frame(width: 195.0, height: 195.0)
+                
+                VStack {
+                    Text("All-time Best Score")
+                        .foregroundStyle(.white)
+                    
+                    HStack {
+                        Image("Coin")
+                        
+                        Text("\(maxScore)")
+                            .foregroundStyle(.white)
+                            .font(.system(size: 24, weight: .semibold))
+                    }
+                }
                 
                 Text("Who Wants \nto be a Millionair")
                     .font(.system(size: 32, weight: .semibold))
