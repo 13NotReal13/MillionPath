@@ -35,36 +35,39 @@ struct RulesView: View {
                 ScrollView(.vertical, showsIndicators: true) {
                     VStack(alignment: .leading) {
                         Text("""
-                    Добро пожаловать в игру «Кто хочет стать миллионером»!
+                Welcome to “Who Wants to Be a Millionaire?”
 
-                    🔹 ЦЕЛЬ
-                    Ответить правильно на 15 вопросов, чтобы выиграть $1,000,000.
-                    
-                    ✅ КАК ИГРАТЬ:
-                    
-                        1.    Выберите один из 4 вариантов ответа.
-                    Только один из них правильный.
-                        2.    На каждый вопрос дается 30 секунд.
-                    Время ограничено, думайте быстро!
-                        3.    С каждым уровнем приз растёт.
-                    Чем дальше, тем выше награда.
-                        4.    Некоторые суммы — несгораемые:
-                        •    Вопрос 5 — $1,000
-                        •    Вопрос 10 — $32,000
-                    
-                    🛟 ПОДСКАЗКИ:
+                🔹 GOAL
+                
+                Answer 15 questions correctly to win $1,000,000.
 
-                    Вы можете воспользоваться каждой подсказкой один раз за игру:
+                ✅ HOW TO PLAY:
+                
+                1. Choose one of the four answer options.
+                Only one is correct.
+                
+                2. You have 30 seconds for each question.
+                Time is limited, so think fast!
+                
+                3. The prize grows with each level.
+                The further you go, the bigger the reward.
+                
+                4. Some amounts are guaranteed:
+                    •    Question 5 — $1,000
+                    •    Question 10 — $32,000
 
-                    🔹 50:50 — убирает два неправильных варианта.
-                    🔹 Помощь зала — зал голосует за правильный вариант 
-                    🔹 Право на ошибку — можно один раз ошибиться
-                    
-                    💰 ЗАВЕРШИТЬ ИГРУ
+                🛟 HINTS:
+                
+                You can use each hint once per game:
 
-                    Вы можете забрать деньги в любой момент до выбора ответа.
+                🔹 50:50 — removes two wrong options.
+                🔹 Ask the Audience — the audience votes for the most likely answer.
+                🔹 Second Chance — get one mistake for free.
 
-                    """
+                💰 END THE GAME
+
+                You can take your winnings at any moment before selecting an answer.
+                """
                         )
                         .foregroundColor(.white)
                         .font(.system(size: 16, weight: .regular))
