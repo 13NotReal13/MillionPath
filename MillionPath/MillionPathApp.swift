@@ -9,9 +9,14 @@ import SwiftUI
 
 @main
 struct MillionPathApp: App {
+    @StateObject private var coordinator = NavigationCoordinator.shared
+    @StateObject private var gameViewModel = GameViewModel()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CoordinatorView()
+                .environmentObject(coordinator)
+                .environmentObject(gameViewModel)
         }
     }
 }
