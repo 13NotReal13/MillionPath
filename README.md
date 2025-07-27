@@ -1,6 +1,6 @@
 # MillionPath
 
-![Demo GIF](assets/demo.gif)
+![Demo](demo.gif)
 
 <p align="center">
   <img width="200" src="https://github.com/user-attachments/assets/fd2181c7-352e-4cb0-ab5b-7fff2c1b1f4b" />
