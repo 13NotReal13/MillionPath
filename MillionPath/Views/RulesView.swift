@@ -38,26 +38,20 @@ struct RulesView: View {
                 Welcome to “Who Wants to Be a Millionaire?”
 
                 🔹 GOAL
-                
                 Answer 15 questions correctly to win $1,000,000.
 
                 ✅ HOW TO PLAY:
-                
                 1. Choose one of the four answer options.
                 Only one is correct.
-                
                 2. You have 30 seconds for each question.
                 Time is limited, so think fast!
-                
                 3. The prize grows with each level.
                 The further you go, the bigger the reward.
-                
                 4. Some amounts are guaranteed:
                     •    Question 5 — $1,000
                     •    Question 10 — $32,000
 
                 🛟 HINTS:
-                
                 You can use each hint once per game:
 
                 🔹 50:50 — removes two wrong options.
@@ -65,7 +59,6 @@ struct RulesView: View {
                 🔹 Second Chance — get one mistake for free.
 
                 💰 END THE GAME
-
                 You can take your winnings at any moment before selecting an answer.
                 """
                         )

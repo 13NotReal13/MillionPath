@@ -230,18 +230,43 @@ extension GameViewModel {
         let question = newGame.questions[newGame.currentQuestionIndex]
         let answers = question.answers
         let correctIndex = answers.firstIndex(where: { $0.isCorrect }) ?? 0
-        
+
         let difficulty = question.difficulty
         let correctProb: Double = difficulty == .hard ? 0.5 : 0.7
-        
-        // Расчёт вероятностей
-        var result: [Double] = Array(repeating: (1.0 - correctProb) / Double(answers.count - 1), count: answers.count)
-        result[correctIndex] = correctProb
 
-        // Переводим в проценты (Int)
-        let votes: [AudienceVote] = result.enumerated().map { index, prob in
+        // Остаток делим на троих случайно
+        let incorrectCount = answers.count - 1
+        let totalLeft = 1.0 - correctProb
+
+        // Генерируем случайные точки на отрезке [0, totalLeft], сортируем, получаем интервалы
+        let points = (1..<incorrectCount).map { _ in Double.random(in: 0...totalLeft) }.sorted()
+        var portions = [points.first ?? 0]
+        for i in 1..<points.count {
+            portions.append(points[i] - points[i-1])
+        }
+        portions.append(totalLeft - (points.last ?? 0))
+
+        // Вставляем правильный ответ
+        var result = [Double]()
+        var pIndex = 0
+        for i in 0..<answers.count {
+            if i == correctIndex {
+                result.append(correctProb)
+            } else {
+                result.append(portions[pIndex])
+                pIndex += 1
+            }
+        }
+
+        // В проценты, округляем, корректируем чтобы сумма была 100
+        var intPercents = result.map { Int(round($0 * 100)) }
+        let diff = 100 - intPercents.reduce(0, +)
+        if let maxIndex = intPercents.enumerated().max(by: { $0.element < $1.element })?.offset {
+            intPercents[maxIndex] += diff
+        }
+
+        let votes: [AudienceVote] = intPercents.enumerated().map { index, percent in
             let letter = ["A", "B", "C", "D"][index]
-            let percent = Int(prob * 100)
             return AudienceVote(letter: letter, answer: answers[index].answer, percentage: percent)
         }
 
