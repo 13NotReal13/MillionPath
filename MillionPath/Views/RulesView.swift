@@ -35,7 +35,35 @@ struct RulesView: View {
                 ScrollView(.vertical, showsIndicators: true) {
                     VStack(alignment: .leading) {
                         Text("""
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.\n\nIt has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.\n\nIt is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
+                    Добро пожаловать в игру «Кто хочет стать миллионером»!
+
+                    🔹 ЦЕЛЬ
+                    Ответить правильно на 15 вопросов, чтобы выиграть $1,000,000.
+                    
+                    ✅ КАК ИГРАТЬ:
+                    
+                        1.    Выберите один из 4 вариантов ответа.
+                    Только один из них правильный.
+                        2.    На каждый вопрос дается 30 секунд.
+                    Время ограничено, думайте быстро!
+                        3.    С каждым уровнем приз растёт.
+                    Чем дальше, тем выше награда.
+                        4.    Некоторые суммы — несгораемые:
+                        •    Вопрос 5 — $1,000
+                        •    Вопрос 10 — $32,000
+                    
+                    🛟 ПОДСКАЗКИ:
+
+                    Вы можете воспользоваться каждой подсказкой один раз за игру:
+
+                    🔹 50:50 — убирает два неправильных варианта.
+                    🔹 Помощь зала — зал голосует за правильный вариант 
+                    🔹 Звонок другу — друг подсказывает
+                    
+                    💰 ЗАВЕРШИТЬ ИГРУ
+
+                    Вы можете забрать деньги в любой момент до выбора ответа.
+
                     """
                         )
                         .foregroundColor(.white)
