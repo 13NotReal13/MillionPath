@@ -1,58 +1,57 @@
-MillionPath
+# MillionPath
 
-<img width="200" height="500" alt="Screenshot 2025-07-26 at 7 34 58 PM" src="https://github.com/user-attachments/assets/fd2181c7-352e-4cb0-ab5b-7fff2c1b1f4b" />
-<img width="198,5" height="500" alt="Screenshot 2025-07-26 at 9 20 00 PM" src="https://github.com/user-attachments/assets/8461b082-f9f1-424a-9667-c84f16d29c4f" />
-<img width="200" height="500" alt="Screenshot 2025-07-26 at 7 36 07 PM" src="https://github.com/user-attachments/assets/7a8d6c3a-6c5f-4366-a6b0-d9920df010d4" />
-<img width="202" height="500" alt="Screenshot 2025-07-26 at 10 31 51 PM" src="https://github.com/user-attachments/assets/1c640b7e-c20a-47b1-96a7-e5964375e8f1" />
+![Demo GIF](assets/demo.gif)
 
+<p align="center">
+  <img width="200" src="https://github.com/user-attachments/assets/fd2181c7-352e-4cb0-ab5b-7fff2c1b1f4b" />
+  <img width="198" src="https://github.com/user-attachments/assets/8461b082-f9f1-424a-9667-c84f16d29c4f" />
+  <img width="200" src="https://github.com/user-attachments/assets/7a8d6c3a-6c5f-4366-a6b0-d9920df010d4" />
+  <img width="202" src="https://github.com/user-attachments/assets/1c640b7e-c20a-47b1-96a7-e5964375e8f1" />
+</p>
 
-
-Красивая и реалистичная мобильная игра для iOS, созданная с использованием SwiftUI, 
-вдохновлённая культовой телеигрой **"Кто хочет стать миллионером?"**
-
-
----
-
- Возможности
-
-- 15 сложных вопросов с четырьмя вариантами ответа
--  Три подсказки: **50:50**, **Помощь зала**, **Вторая попытка**
--  Таймер для каждого вопроса
--  Звуковые эффекты при правильном/неправильном ответе
--  Таблица прогресса с ключевыми суммами
--  Экран результата с отображением рекордного выигрыша
--  Подгрузка вопросов из API (опционально)
-
+A beautiful, realistic iOS mobile game created with SwiftUI and inspired by the iconic TV show **"Who Wants to Be a Millionaire?"**
 
 ---
 
- Технологии
+## Features
 
-- **Язык**: Swift
-- **Фреймворк**: SwiftUI
-- **Архитектура**: MVVM-C
-- **Аудио**: AVFoundation
-- **Сеть**: Async/Await + URLSession
-- **Кастомный UI**: Формы, градиенты, анимации
-
----
-
- Правила игры
-
-- Чтобы выиграть $1,000,000, нужно ответить на 15 вопросов.
-- На каждый вопрос даётся **30 секунд**.
-- Есть 3 подсказки:
-  - **50:50** — убирает 2 неверных варианта.
-  - **Помощь зала** — показывает, что думает аудитория.
-  - **Вторая попытка** — симулирует мнение друга.
-- Неправильный ответ завершает игру, если не пройдена несгораемая сумма.
-- Можно **забрать деньги** в любой момент.
+- 15 challenging questions with four answer options
+- Three lifelines: **50:50**, **Audience Help**, **Second Chance**
+- Timer for each question
+- Sound effects for correct and incorrect answers
+- Progress table with key milestones
+- Result screen showing your highest win
+- Questions loaded from an API (optional)
 
 ---
 
- Разработчики
+## Technologies
 
-- [Иван (13NotReal13)](https://github.com/13NotReal13)
-- [Сергей (mylovelyserge)](https://github.com/mylovelyserge)
-- [Андрей (PanAndrei)](https://github.com/PanAndrei)
-- [Сергей (SergeyZakurakin)](https://github.com/SergeyZakurakin)
+- **Language**: Swift
+- **Framework**: SwiftUI
+- **Architecture**: MVVM-C
+- **Audio**: AVFoundation
+- **Networking**: Async/Await + URLSession
+- **Custom UI**: Shapes, gradients, animations
+
+---
+
+## Game Rules
+
+- Answer 15 questions to win $1,000,000.
+- Each question gives you **30 seconds** to answer.
+- Three lifelines are available:
+  - **50:50** — removes two incorrect options.
+  - **Audience Help** — shows what the audience thinks.
+  - **Second Chance** — simulates a friend's opinion.
+- A wrong answer ends the game, unless you’ve passed a milestone amount.
+- You can **take the money** and end the game at any moment.
+
+---
+
+## Developers
+
+- [Ivan (13NotReal13)](https://github.com/13NotReal13) — Team Lead & Developer
+- [Sergey (mylovelyserge)](https://github.com/mylovelyserge) — Developer
+- [Andrey (PanAndrei)](https://github.com/PanAndrei) — Developer
+- [Sergey (SergeyZakurakin)](https://github.com/SergeyZakurakin) — Developer
