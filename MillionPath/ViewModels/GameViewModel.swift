@@ -29,8 +29,10 @@ class GameViewModel: ObservableObject {
     
     @Published var showAudienceHelp = false
     @Published var audienceAnswer: String = ""
-    @Published var showFriendHelp = false
-    @Published var friendAnswer: String = ""
+    
+    @Published var usedExtraLife = false
+    @Published var extraLifeActive = false
+ 
     
     @Published var audienceVotes: [AudienceVote] = []
     
@@ -48,7 +50,7 @@ class GameViewModel: ObservableObject {
     private enum Constants {
         static let costs: [Int] = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16_000, 32_000, 64_000, 125_000, 250_000, 500_000, 1_000_000]
         static let nonBurningCosts: [Int] = [0, 1000, 32_000, 1_000_000]
-        static let friendsProbability: Double = 0.8
+
         static let expertsEasyProbability: Double = 0.7
         static let expertsHardProbability: Double = 0.5
         static let secondsForRound = 30
@@ -107,32 +109,53 @@ extension GameViewModel {
         let questionIndex = newGame.currentQuestionIndex
         var question = newGame.questions[questionIndex]
         guard let correctIndex = question.answers.firstIndex(where: { $0.isCorrect }) else { return }
-        
+
         if selectedIndex == correctIndex {
             question.answers[selectedIndex].state = .correct
             soundService.playSound(.correct)
-        } else {
-            question.answers[selectedIndex].state = .incorrect
-            question.answers[correctIndex].state = .correct
-            soundService.playSound(.wrong)
-        }
-        
-        for index in question.answers.indices where index != selectedIndex && index != correctIndex {
-            question.answers[index].state = .normal
-        }
-        newGame.questions[questionIndex] = question
-        game = newGame
-        
-        // Переход к следующему вопросу или конец игры
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            guard let self = self else { return }
-            if selectedIndex == correctIndex {
+
+            for index in question.answers.indices where index != selectedIndex {
+                question.answers[index].state = .normal
+            }
+
+            newGame.questions[questionIndex] = question
+            game = newGame
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+                guard let self = self else { return }
                 self.nextQuestion()
                 self.startTimer()
                 self.userInteractionEnable = true
                 self.soundService.playSound(.start)
+            }
+
+        } else {
+            // Неверный ответ
+            question.answers[selectedIndex].state = .incorrect
+            question.answers[correctIndex].state = .correct
+            soundService.playSound(.wrong)
+
+            for index in question.answers.indices where index != selectedIndex && index != correctIndex {
+                question.answers[index].state = .normal
+            }
+
+            newGame.questions[questionIndex] = question
+            game = newGame
+
+            if extraLifeActive {
+                extraLifeActive = false
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+                    guard let self = self else { return }
+                    self.nextQuestion()
+                    self.startTimer()
+                    self.userInteractionEnable = true
+                    self.soundService.playSound(.start)
+                }
             } else {
-                self.gameOver()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    self.gameOver()
+                }
             }
         }
     }
@@ -142,9 +165,10 @@ extension GameViewModel {
         soundService.playSound(.start)
         game.currentQuestionIndex = 0
         game.timeRemaining = Constants.secondsForRound
+        extraLifeActive = false
+        usedExtraLife = false
         startTimer()
     }
-    
     func pauseGame() {
         stopTimer()
         AudioManager.shared.pause()
@@ -199,28 +223,6 @@ extension GameViewModel {
         game = newGame
     }
     
-    /// Звонок другу
-    func getFriendsHelp() -> String {
-        var newGame = game
-        guard newGame.currentQuestionIndex < newGame.questions.count else { return "" }
-        let question = newGame.questions[newGame.currentQuestionIndex]
-        
-        let isCorrect = Double.random(in: 0...1) < 0.8
-        
-        let answerText: String
-        
-        if isCorrect {
-            answerText = question.answers.first(where: { $0.isCorrect })?.answer ?? ""
-        } else {
-            let incorrects = question.answers.filter { !$0.isCorrect && $0.state != .hidden }
-            answerText = incorrects.randomElement()?.answer ?? ""
-        }
-        
-        newGame.usedHints.insert(.friendsHelp)
-        game = newGame
-        return answerText
-    }
-    
     /// Помощь зала
     func getExpertHelpVotes() -> [AudienceVote] {
         var newGame = game
@@ -249,7 +251,6 @@ extension GameViewModel {
         return votes
     }
     
-    
     /// Проверка: была ли подсказка использована
     func useFiftyFiftyHintIfNeeded() {
         guard !game.usedHints.contains(.fiftyFifty) else { return }
@@ -262,12 +263,12 @@ extension GameViewModel {
         showAudienceHelp = true
     }
     
-    func useFriendHintIfNeeded() {
-        guard !game.usedHints.contains(.friendsHelp) else { return }
-        friendAnswer = getFriendsHelp()
-        showFriendHelp = true
+    func useSecondChanceIfNeeded() {
+        guard !game.usedHints.contains(.extraLife) else { return }
+        game.usedHints.insert(.extraLife)
+        extraLifeActive = true
+        usedExtraLife = true
     }
-    
     
     /// Забрать выйгрыш
     func takeMoneyNow() {
@@ -301,6 +302,7 @@ extension GameViewModel {
         
         game.currentQuestionIndex += 1
         game.timeRemaining = Constants.secondsForRound
+        extraLifeActive = false
     }
 }
 

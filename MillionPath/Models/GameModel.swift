@@ -28,5 +28,5 @@ struct Game {
 enum Hint: String, CaseIterable, Hashable {
     case fiftyFifty
     case audience
-    case friendsHelp
+    case extraLife
 }

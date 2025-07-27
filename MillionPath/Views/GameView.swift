@@ -49,12 +49,11 @@ struct GameView: View {
                         }
                         .disabled(viewModel.game.usedHints.contains(.audience) || !viewModel.userInteractionEnable)
                         
-                    HelpButtonView(icon: Image("call"), isUsed: viewModel.game.usedHints.contains(.friendsHelp))
+                    HelpButtonView(icon: Image(.life), isUsed: viewModel.game.usedHints.contains(.extraLife))
                         .onTapGesture {
-                            viewModel.useFriendHintIfNeeded()
-                            coordinator.present(sheet: .friendHelp(viewModel.friendAnswer))
+                            viewModel.useSecondChanceIfNeeded()
                         }
-                        .disabled(viewModel.game.usedHints.contains(.friendsHelp) || !viewModel.userInteractionEnable)
+                        .disabled(viewModel.game.usedHints.contains(.extraLife) || !viewModel.userInteractionEnable)
                 }
             }
             .padding()
@@ -207,7 +206,7 @@ struct AudienceHelpView: View {
                             
                             Rectangle()
                                 .fill(Color.orange)
-                                .frame(width: 24, height: CGFloat(vote.percentage * 2)) // умножаем для видимости
+                                .frame(width: 24, height: CGFloat(vote.percentage * 2))
                                 .cornerRadius(4)
                             
                             Text(vote.letter)
